@@ -1,3 +1,10 @@
+# TODO: Things the GUI might have:
+    # Camera
+    # 4-Directional Motor Control
+    # Cellular connectivity status
+    # GPS location
+    # Battery life
+
 import sys
 import requests
 
