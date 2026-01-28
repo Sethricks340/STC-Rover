@@ -23,8 +23,9 @@ class MainWindow(QMainWindow):
 
         self.setWindowTitle("My App")
 
-        widget = QCheckBox("LED2 ON")
-        widget.setCheckState(Qt.CheckState.Checked)
+        # widget = QCheckBox("LED2 ON")
+        widget = QCheckBox("MOTOR ON")
+        widget.setCheckState(Qt.CheckState.Unchecked)
 
         widget.stateChanged.connect(self.show_state)
 
