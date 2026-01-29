@@ -1,6 +1,8 @@
 # TODO: Things the GUI might have:
-    # Camera
-    # 4-Directional Motor Control
+    # Camera Feed
+    # Camera Direction Gimball
+    # 4-Directional Directional Control
+    # Motor Speed control
     # Cellular connectivity status
     # GPS location
     # Battery life
