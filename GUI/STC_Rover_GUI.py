@@ -7,36 +7,54 @@
 
 import sys
 import requests
-
 from PyQt6.QtCore import Qt
-from PyQt6.QtWidgets import (
-    QApplication,
-    QCheckBox,
-    QMainWindow,
-)
+from PyQt6.QtWidgets import QApplication, QMainWindow, QCheckBox, QSlider, QHBoxLayout, QVBoxLayout, QWidget
 
-# Subclass QMainWindow to customize application's main window
 class MainWindow(QMainWindow):
-
     def __init__(self):
         super().__init__()
+        self.setWindowTitle("RC Car Controller")
+        self.setWindowTitle("App Name")
+        self.resize(600, 600)
+        self.background_color = "#0F1C37"
+        self.setStyleSheet(f"background-color: {self.background_color};")
 
-        self.setWindowTitle("My App")
 
-        # widget = QCheckBox("LED2 ON")
-        widget = QCheckBox("MOTOR ON")
-        widget.setCheckState(Qt.CheckState.Unchecked)
+        self.motor_on = False
 
-        widget.stateChanged.connect(self.show_state)
+        # Motor ON/OFF checkbox
+        self.checkbox = QCheckBox("MOTOR ON")
+        self.checkbox.setStyleSheet("color: white; font-size: 14px;")
+        self.checkbox.stateChanged.connect(self.toggle_motor)
 
-        self.setCentralWidget(widget)
+        # Vertical slider
+        self.slider = QSlider(Qt.Orientation.Vertical)
+        self.slider.setMinimum(0)
+        self.slider.setMaximum(100)
+        self.slider.setValue(0)
+        self.slider.valueChanged.connect(self.update_speed)
 
-    def show_state(self, s):
-        if s == Qt.CheckState.Checked.value:
-            requests.get("http://192.168.0.50/on")
-        else:
-            requests.get("http://192.168.0.50/off")
-    
+        # Layout
+        layout = QHBoxLayout()
+        layout.addWidget(self.checkbox)
+        layout.addWidget(self.slider)
+
+        container = QWidget()
+        container.setLayout(layout)
+        self.setCentralWidget(container)
+
+    def toggle_motor(self, state):
+        return
+        # self.motor_on = state == Qt.CheckState.Checked.value
+        # if self.motor_on:
+        #     requests.get(f"http://192.168.0.50/on")
+        # else:
+        #     requests.get(f"http://192.168.0.50/off")
+        #     self.slider.setValue(0)  # reset speed when motor is off
+
+    def update_speed(self, value):
+        return
+
 app = QApplication(sys.argv)
 window = MainWindow()
 window.show()
