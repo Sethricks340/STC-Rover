@@ -1,10 +1,10 @@
 #include <WiFi.h>
 #include <Arduino.h>
 
-const int IN1 = 2;
-const int IN2 = 4;
-const int IN3 = 19;
-const int IN4 = 18;
+const int IN1 = 19;
+const int IN2 = 18;
+const int IN3 = 5;
+const int IN4 = 4;
 
 const char* ssid = "Threat Level Midnight";
 const char* password = "cowabunga2!!";
@@ -21,23 +21,23 @@ int ledPin = 2;  // built-in LED
 
 void motor_on(int number){
   if (number){
-    digitalWrite(IN1, LOW);
-    digitalWrite(IN2, HIGH);
-  }
-  else {
     digitalWrite(IN3, LOW);
     digitalWrite(IN4, HIGH);
+  }
+  else {
+    digitalWrite(IN1, LOW);
+    digitalWrite(IN2, HIGH);
   }
 }
 
 void motor_off(int number){
   if (number){
-    digitalWrite(IN1, LOW);
-    digitalWrite(IN2, LOW);
-  }
-  else {
     digitalWrite(IN3, LOW);
     digitalWrite(IN4, LOW);
+  }
+  else {
+    digitalWrite(IN1, LOW);
+    digitalWrite(IN2, LOW);
   }
 }
 
