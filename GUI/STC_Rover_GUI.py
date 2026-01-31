@@ -7,6 +7,7 @@
     # GPS location
     # Battery life
 # If ESP not connected, GUI crashes
+# Add irectional Control (backwards/ forwards)
 
 import sys
 import requests
