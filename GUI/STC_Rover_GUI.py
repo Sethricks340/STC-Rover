@@ -51,7 +51,7 @@ class MainWindow(QMainWindow):
 
     def motor_control(self, motor, state):
         if state == Qt.CheckState.Checked.value:
-            requests.get(f"http://192.168.0.50/motor/{motor}/on")
+            requests.get(f"http://192.168.0.50/motor/{motor}/on/200")
         else:
             requests.get(f"http://192.168.0.50/motor/{motor}/off")
     
