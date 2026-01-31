@@ -36,14 +36,14 @@ class MainWindow(QMainWindow):
         self.slider0.setMinimum(0)
         self.slider0.setMaximum(255)
         self.slider0.setValue(0)
-        self.slider0.valueChanged.connect(self.update_speed)
+        self.slider0.valueChanged.connect(self.update_speed0)
 
-        # First Vertical slider
+        # Second Vertical slider
         self.slider1 = QSlider(Qt.Orientation.Vertical)
         self.slider1.setMinimum(0)
         self.slider1.setMaximum(255)
         self.slider1.setValue(0)
-        # self.slider1.valueChanged.connect(self.update_speed)
+        self.slider1.valueChanged.connect(self.update_speed1)
 
         self.motor0check = QCheckBox("MOTOR 0 ON")
         self.motor0check.setCheckState(Qt.CheckState.Unchecked)
@@ -68,21 +68,26 @@ class MainWindow(QMainWindow):
         container.setLayout(layout)
         self.setCentralWidget(container)
 
-    def update_speed(self, value):
-        print(f"Speed set to {value}")
-        # Update motors that are currently ON
+    def update_speed0(self, value):
+        print(f"Speed0 set to {value}")
         if self.motor0check.isChecked():
             requests.get(f"http://192.168.0.50/motor/0/on/{value}")
+
+    def update_speed1(self, value):
+        print(f"Speed1 set to {value}")
         if self.motor1check.isChecked():
             requests.get(f"http://192.168.0.50/motor/1/on/{value}")
 
-
     def motor_control(self, motor, state):
-        value = self.slider0.value()
+        # pick the correct slider
+        slider = self.slider0 if motor == 0 else self.slider1
+        value = slider.value()
+
         if state == Qt.CheckState.Checked.value:
             requests.get(f"http://192.168.0.50/motor/{motor}/on/{value}")
         else:
             requests.get(f"http://192.168.0.50/motor/{motor}/off")
+
     
 app = QApplication(sys.argv)
 window = MainWindow()
