@@ -1,8 +1,10 @@
 #include <WiFi.h>
 #include <Arduino.h>
 
-const int IN3 = 19; // IN3
-const int IN4 = 18; // IN4
+const int IN1 = 2;
+const int IN2 = 4;
+const int IN3 = 19;
+const int IN4 = 18;
 
 const char* ssid = "Threat Level Midnight";
 const char* password = "cowabunga2!!";
@@ -17,20 +19,34 @@ WiFiServer server(80);
 
 int ledPin = 2;  // built-in LED
 
-void motor_on(){
-  digitalWrite(IN3, LOW);
-  digitalWrite(IN4, HIGH);
+void motor_on(int number){
+  if (number){
+    digitalWrite(IN1, LOW);
+    digitalWrite(IN2, HIGH);
+  }
+  else {
+    digitalWrite(IN3, LOW);
+    digitalWrite(IN4, HIGH);
+  }
 }
 
-void motor_off(){
+void motor_off(int number){
+  if (number){
+    digitalWrite(IN1, LOW);
+    digitalWrite(IN2, LOW);
+  }
+  else {
     digitalWrite(IN3, LOW);
     digitalWrite(IN4, LOW);
+  }
 }
 
 void setup() {
   Serial.begin(115200);
 
   pinMode(ledPin, OUTPUT);
+  pinMode(IN1, OUTPUT);
+  pinMode(IN2, OUTPUT);
   pinMode(IN3, OUTPUT);
   pinMode(IN4, OUTPUT);
 
@@ -59,13 +75,12 @@ void loop() {
   String req = client.readStringUntil('\r');
   client.flush();
 
-  // // Control LED
-  // if (req.indexOf("/on") != -1)  digitalWrite(ledPin, HIGH);
-  // if (req.indexOf("/off") != -1) digitalWrite(ledPin, LOW);
-
-  // Control LED
-  if (req.indexOf("/on") != -1)  motor_on();
-  if (req.indexOf("/off") != -1) motor_off();
+  // Get Request
+  if (req.indexOf("/motor/0/on") != -1)  motor_on(0);
+  if (req.indexOf("/motor/1/on") != -1)  motor_on(1);
+  
+  if (req.indexOf("/motor/0/of") != -1)  motor_off(0);
+  if (req.indexOf("/motor/1/of") != -1)  motor_off(1);
 
   // Reply
   client.println("HTTP/1.1 200 OK");

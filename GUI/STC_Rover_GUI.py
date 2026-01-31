@@ -9,54 +9,52 @@
 
 import sys
 import requests
-from PyQt6.QtCore import Qt
-from PyQt6.QtWidgets import QApplication, QMainWindow, QCheckBox, QSlider, QHBoxLayout, QVBoxLayout, QWidget
 
+from PyQt6.QtCore import Qt
+from PyQt6.QtWidgets import (
+    QApplication,
+    QCheckBox,
+    QMainWindow,
+    QWidget,
+    QVBoxLayout
+)
+
+# Subclass QMainWindow to customize application's main window
 class MainWindow(QMainWindow):
+
     def __init__(self):
         super().__init__()
-        self.setWindowTitle("RC Car Controller")
-        self.setWindowTitle("App Name")
-        self.resize(600, 600)
-        self.background_color = "#0F1C37"
-        self.setStyleSheet(f"background-color: {self.background_color};")
 
+        self.setWindowTitle("My App")
 
-        self.motor_on = False
+        # Central widget
+        central = QWidget()
+        layout = QVBoxLayout()
 
-        # Motor ON/OFF checkbox
-        self.checkbox = QCheckBox("MOTOR ON")
-        self.checkbox.setStyleSheet("color: white; font-size: 14px;")
-        self.checkbox.stateChanged.connect(self.toggle_motor)
+        motor0check = QCheckBox("MOTOR 0 ON")
+        motor0check.setCheckState(Qt.CheckState.Unchecked)
+        motor0check.stateChanged.connect(
+            lambda s: self.motor_control(0, s)
+        )
+        
+        motor1check = QCheckBox("MOTOR 1 ON")
+        motor1check.setCheckState(Qt.CheckState.Unchecked)
+        motor1check.stateChanged.connect(
+            lambda s: self.motor_control(1, s)
+        )
 
-        # Vertical slider
-        self.slider = QSlider(Qt.Orientation.Vertical)
-        self.slider.setMinimum(0)
-        self.slider.setMaximum(100)
-        self.slider.setValue(0)
-        self.slider.valueChanged.connect(self.update_speed)
+        layout.addWidget(motor0check)
+        layout.addWidget(motor1check)
 
-        # Layout
-        layout = QHBoxLayout()
-        layout.addWidget(self.checkbox)
-        layout.addWidget(self.slider)
+        central.setLayout(layout)
+        self.setCentralWidget(central)
 
-        container = QWidget()
-        container.setLayout(layout)
-        self.setCentralWidget(container)
-
-    def toggle_motor(self, state):
-        return
-        # self.motor_on = state == Qt.CheckState.Checked.value
-        # if self.motor_on:
-        #     requests.get(f"http://192.168.0.50/on")
-        # else:
-        #     requests.get(f"http://192.168.0.50/off")
-        #     self.slider.setValue(0)  # reset speed when motor is off
-
-    def update_speed(self, value):
-        return
-
+    def motor_control(self, motor, state):
+        if state == Qt.CheckState.Checked.value:
+            requests.get(f"http://192.168.0.50/motor/{motor}/on")
+        else:
+            requests.get(f"http://192.168.0.50/motor/{motor}/off")
+    
 app = QApplication(sys.argv)
 window = MainWindow()
 window.show()
