@@ -16,7 +16,9 @@ from PyQt6.QtWidgets import (
     QCheckBox,
     QMainWindow,
     QWidget,
-    QVBoxLayout
+    QVBoxLayout,
+    QHBoxLayout,
+    QSlider
 )
 
 # Subclass QMainWindow to customize application's main window
@@ -25,33 +27,52 @@ class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
 
-        self.setWindowTitle("My App")
+        self.setWindowTitle("STC Rover Control GUI")
 
-        # Central widget
-        central = QWidget()
         layout = QVBoxLayout()
 
-        motor0check = QCheckBox("MOTOR 0 ON")
-        motor0check.setCheckState(Qt.CheckState.Unchecked)
-        motor0check.stateChanged.connect(
+        # Vertical slider
+        self.slider = QSlider(Qt.Orientation.Vertical)
+        self.slider.setMinimum(0)
+        self.slider.setMaximum(255)
+        self.slider.setValue(0)
+        self.slider.valueChanged.connect(self.update_speed)
+
+        self.motor0check = QCheckBox("MOTOR 0 ON")
+        self.motor0check.setCheckState(Qt.CheckState.Unchecked)
+        self.motor0check.stateChanged.connect(
             lambda s: self.motor_control(0, s)
         )
         
-        motor1check = QCheckBox("MOTOR 1 ON")
-        motor1check.setCheckState(Qt.CheckState.Unchecked)
-        motor1check.stateChanged.connect(
+        self.motor1check = QCheckBox("MOTOR 1 ON")
+        self.motor1check.setCheckState(Qt.CheckState.Unchecked)
+        self.motor1check.stateChanged.connect(
             lambda s: self.motor_control(1, s)
         )
 
-        layout.addWidget(motor0check)
-        layout.addWidget(motor1check)
+        # Layout
+        layout = QHBoxLayout()
+        layout.addWidget(self.motor0check)
+        layout.addWidget(self.motor1check)
+        layout.addWidget(self.slider)
 
-        central.setLayout(layout)
-        self.setCentralWidget(central)
+        container = QWidget()
+        container.setLayout(layout)
+        self.setCentralWidget(container)
+
+    def update_speed(self, value):
+        print(f"Speed set to {value}")
+        # Update motors that are currently ON
+        if self.motor0check.isChecked():
+            requests.get(f"http://192.168.0.50/motor/0/on/{value}")
+        if self.motor1check.isChecked():
+            requests.get(f"http://192.168.0.50/motor/1/on/{value}")
+
 
     def motor_control(self, motor, state):
+        value = self.slider.value()
         if state == Qt.CheckState.Checked.value:
-            requests.get(f"http://192.168.0.50/motor/{motor}/on/200")
+            requests.get(f"http://192.168.0.50/motor/{motor}/on/{value}")
         else:
             requests.get(f"http://192.168.0.50/motor/{motor}/off")
     
