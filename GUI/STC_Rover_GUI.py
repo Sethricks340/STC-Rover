@@ -6,6 +6,7 @@
     # Cellular connectivity status
     # GPS location
     # Battery life
+# If ESP not connected, GUI crashes
 
 import sys
 import requests
