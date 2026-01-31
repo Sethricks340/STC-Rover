@@ -94,3 +94,19 @@ app = QApplication(sys.argv)
 window = MainWindow()
 window.show()
 app.exec()
+
+
+
+## Minimal websocket example    
+# import websocket
+
+# # Replace with your ESP IP
+# ws = websocket.WebSocket()
+# ws.connect("ws://192.168.0.50/ws")
+
+# # Send motor commands
+# ws.send("motor/0/on/128")  # turn motor 0 on with speed 128
+# ws.send("motor/1/off")     # turn motor 1 off
+
+# # Close when done
+# ws.close()

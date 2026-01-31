@@ -131,3 +131,102 @@ if (req.indexOf("/motor/1/off") != -1) motor_off(1);
 
   client.stop();
 }
+
+
+
+
+
+
+// Minimal Websocket Example:
+/*
+#include <WiFi.h>
+#include <ESPAsyncWebServer.h>
+
+const char* ssid = "Threat Level Midnight";
+const char* password = "cowabunga2!!";
+
+AsyncWebServer server(80);
+AsyncWebSocket ws("/ws");  // endpoint
+
+void handleWebSocketMessage(void *arg, uint8_t *data, size_t len) {
+    // data is raw bytes from GUI
+    data[len] = 0;
+    String msg = (char*)data;
+    Serial.println("Received: " + msg);
+
+    // Example: motor/0/on/128
+    if (msg.startsWith("motor/0/on/")) {
+        int speed = msg.substring(strlen("motor/0/on/")).toInt();
+        motor_on(0, speed);
+    }
+}
+
+void onEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, 
+             AwsEventType type, void *arg, uint8_t *data, size_t len) {
+    if (type == WS_EVT_CONNECT) {
+        Serial.printf("Client connected: %u\n", client->id());
+    } else if (type == WS_EVT_DISCONNECT) {
+        Serial.printf("Client disconnected: %u\n", client->id());
+        // Stop motors or mark GUI lost connection here
+        motor_off(0);
+        motor_off(1);
+    } else if (type == WS_EVT_DATA) {
+        handleWebSocketMessage(arg, data, len);
+    }
+}
+
+void setup() {
+    Serial.begin(115200);
+    WiFi.begin(ssid, password);
+    while (WiFi.status() != WL_CONNECTED) delay(500);
+    Serial.println(WiFi.localIP());
+
+    ws.onEvent(onEvent);
+    server.addHandler(&ws);
+    server.begin();
+}
+
+void loop() {
+    // Nothing needed here; AsyncWebServer handles everything
+}
+
+
+... more ... 
+
+#include <WiFi.h>
+
+const char* ssid = "Threat Level Midnight";
+const char* password = "cowabunga2!!";
+
+// Static IP settings
+IPAddress local_IP(192,168,0,50);  // The IP you want
+IPAddress gateway(192,168,0,1);   // Usually your router
+IPAddress subnet(255,255,255,0);
+IPAddress dns(8,8,8,8);           // Optional
+
+void setup() {
+    Serial.begin(115200);
+
+    // Configure static IP
+    if (!WiFi.config(local_IP, gateway, subnet, dns)) {
+        Serial.println("STA Failed to configure");
+    }
+
+    WiFi.begin(ssid, password);
+
+    while (WiFi.status() != WL_CONNECTED) {
+        delay(500);
+        Serial.print(".");
+    }
+
+    Serial.println();
+    Serial.print("Connected. IP address: ");
+    Serial.println(WiFi.localIP());
+}
+
+void loop() {
+    // your code here
+}
+
+
+*/
