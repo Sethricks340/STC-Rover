@@ -1,3 +1,6 @@
+// TODO: If GUI connection lost, keeps state of last request!
+//      Might need to update to TCP or WebSocket for constant connection status
+
 #include <WiFi.h>
 #include <Arduino.h>
 
