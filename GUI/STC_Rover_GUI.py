@@ -1,113 +1,118 @@
-# TODO: Things the GUI might have:
-    # Camera Feed
-    # Camera Direction Gimball
-    # 4-Directional Directional Control
-    # Motor Speed control
-    # Cellular connectivity status
-    # GPS location
-    # Battery life
-# If ESP not connected, GUI crashes
-# Add irectional Control (backwards/ forwards)
+# # TODO: Things the GUI might have:
+#     # Camera Feed
+#     # Camera Direction Gimball
+#     # 4-Directional Directional Control
+#     # Motor Speed control
+#     # Cellular connectivity status
+#     # GPS location
+#     # Battery life
+# # If ESP not connected, GUI crashes
+# # Add irectional Control (backwards/ forwards)
 
-import sys
-import requests
+# import sys
+# import requests
 
-from PyQt6.QtCore import Qt
-from PyQt6.QtWidgets import (
-    QApplication,
-    QCheckBox,
-    QMainWindow,
-    QWidget,
-    QVBoxLayout,
-    QHBoxLayout,
-    QSlider
-)
+# from PyQt6.QtCore import Qt
+# from PyQt6.QtWidgets import (
+#     QApplication,
+#     QCheckBox,
+#     QMainWindow,
+#     QWidget,
+#     QVBoxLayout,
+#     QHBoxLayout,
+#     QSlider
+# )
 
-# Subclass QMainWindow to customize application's main window
-class MainWindow(QMainWindow):
+# # Subclass QMainWindow to customize application's main window
+# class MainWindow(QMainWindow):
 
-    def __init__(self):
-        super().__init__()
+#     def __init__(self):
+#         super().__init__()
 
-        self.setWindowTitle("STC Rover Control GUI")
+#         self.setWindowTitle("STC Rover Control GUI")
 
-        layout = QVBoxLayout()
+#         layout = QVBoxLayout()
 
-        # First Vertical slider
-        self.slider0 = QSlider(Qt.Orientation.Vertical)
-        self.slider0.setMinimum(0)
-        self.slider0.setMaximum(255)
-        self.slider0.setValue(0)
-        self.slider0.valueChanged.connect(self.update_speed0)
+#         # First Vertical slider
+#         self.slider0 = QSlider(Qt.Orientation.Vertical)
+#         self.slider0.setMinimum(0)
+#         self.slider0.setMaximum(255)
+#         self.slider0.setValue(0)
+#         self.slider0.valueChanged.connect(self.update_speed0)
 
-        # Second Vertical slider
-        self.slider1 = QSlider(Qt.Orientation.Vertical)
-        self.slider1.setMinimum(0)
-        self.slider1.setMaximum(255)
-        self.slider1.setValue(0)
-        self.slider1.valueChanged.connect(self.update_speed1)
+#         # Second Vertical slider
+#         self.slider1 = QSlider(Qt.Orientation.Vertical)
+#         self.slider1.setMinimum(0)
+#         self.slider1.setMaximum(255)
+#         self.slider1.setValue(0)
+#         self.slider1.valueChanged.connect(self.update_speed1)
 
-        self.motor0check = QCheckBox("MOTOR 0 ON")
-        self.motor0check.setCheckState(Qt.CheckState.Unchecked)
-        self.motor0check.stateChanged.connect(
-            lambda s: self.motor_control(0, s)
-        )
+#         self.motor0check = QCheckBox("MOTOR 0 ON")
+#         self.motor0check.setCheckState(Qt.CheckState.Unchecked)
+#         self.motor0check.stateChanged.connect(
+#             lambda s: self.motor_control(0, s)
+#         )
         
-        self.motor1check = QCheckBox("MOTOR 1 ON")
-        self.motor1check.setCheckState(Qt.CheckState.Unchecked)
-        self.motor1check.stateChanged.connect(
-            lambda s: self.motor_control(1, s)
-        )
+#         self.motor1check = QCheckBox("MOTOR 1 ON")
+#         self.motor1check.setCheckState(Qt.CheckState.Unchecked)
+#         self.motor1check.stateChanged.connect(
+#             lambda s: self.motor_control(1, s)
+#         )
 
-        # Layout
-        layout = QHBoxLayout()
-        layout.addWidget(self.motor0check)
-        layout.addWidget(self.motor1check)
-        layout.addWidget(self.slider0)
-        layout.addWidget(self.slider1)
+#         # Layout
+#         layout = QHBoxLayout()
+#         layout.addWidget(self.motor0check)
+#         layout.addWidget(self.motor1check)
+#         layout.addWidget(self.slider0)
+#         layout.addWidget(self.slider1)
 
-        container = QWidget()
-        container.setLayout(layout)
-        self.setCentralWidget(container)
+#         container = QWidget()
+#         container.setLayout(layout)
+#         self.setCentralWidget(container)
 
-    def update_speed0(self, value):
-        print(f"Speed0 set to {value}")
-        if self.motor0check.isChecked():
-            requests.get(f"http://192.168.0.50/motor/0/on/{value}")
+#     def update_speed0(self, value):
+#         print(f"Speed0 set to {value}")
+#         if self.motor0check.isChecked():
+#             requests.get(f"http://192.168.0.50/motor/0/on/{value}")
 
-    def update_speed1(self, value):
-        print(f"Speed1 set to {value}")
-        if self.motor1check.isChecked():
-            requests.get(f"http://192.168.0.50/motor/1/on/{value}")
+#     def update_speed1(self, value):
+#         print(f"Speed1 set to {value}")
+#         if self.motor1check.isChecked():
+#             requests.get(f"http://192.168.0.50/motor/1/on/{value}")
 
-    def motor_control(self, motor, state):
-        # pick the correct slider
-        slider = self.slider0 if motor == 0 else self.slider1
-        value = slider.value()
+#     def motor_control(self, motor, state):
+#         # pick the correct slider
+#         slider = self.slider0 if motor == 0 else self.slider1
+#         value = slider.value()
 
-        if state == Qt.CheckState.Checked.value:
-            requests.get(f"http://192.168.0.50/motor/{motor}/on/{value}")
-        else:
-            requests.get(f"http://192.168.0.50/motor/{motor}/off")
+#         if state == Qt.CheckState.Checked.value:
+#             requests.get(f"http://192.168.0.50/motor/{motor}/on/{value}")
+#         else:
+#             requests.get(f"http://192.168.0.50/motor/{motor}/off")
 
     
-app = QApplication(sys.argv)
-window = MainWindow()
-window.show()
-app.exec()
+# app = QApplication(sys.argv)
+# window = MainWindow()
+# window.show()
+# app.exec()
 
 
 
-## Minimal websocket example    
-# import websocket
+# Minimal websocket example    
+import websocket
 
-# # Replace with your ESP IP
-# ws = websocket.WebSocket()
-# ws.connect("ws://192.168.0.50/ws")
+# Replace with your ESP IP
+ws = websocket.WebSocket()
+ws.connect("ws://192.168.0.50/ws")
 
-# # Send motor commands
+# Send motor commands
 # ws.send("motor/0/on/128")  # turn motor 0 on with speed 128
 # ws.send("motor/1/off")     # turn motor 1 off
+while True:
+    cmd = input("Enter command or 'exit' to quit: ")
+    if cmd.lower() == 'exit':
+        break
+    ws.send(cmd)
 
-# # Close when done
-# ws.close()
+# Close when done
+ws.close()
