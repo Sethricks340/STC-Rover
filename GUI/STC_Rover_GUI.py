@@ -9,10 +9,10 @@
 # If ESP not connected, GUI crashes
 # If try to connect GUI first, get this: Error receiving: [WinError 10054] An existing connection was forcibly closed by the remote host
 # Add directional Control (backwards/ forwards)
+# Directional control updates motors without changing slider
 
 import sys
 import websocket
-import threading
 
 ws = websocket.WebSocket()
 ws.connect("ws://192.168.0.50/ws")
@@ -27,23 +27,6 @@ from PyQt6.QtWidgets import (
     QHBoxLayout,
     QSlider
 )
-
-# def receive_messages():
-#     try:
-#         while True:
-#             msg = ws.recv()  # Blocks and waits for messages from server
-#             if not msg:
-#                 print("Connection closed by server")
-#                 break
-#             print(f"Server: {msg}")
-#     except websocket.WebSocketConnectionClosedException:
-#         print("WebSocket disconnected")
-#     except Exception as e:
-#         print(f"Error receiving: {e}")
-
-# # Start receive thread
-# receive_thread = threading.Thread(target=receive_messages, daemon=True)
-# receive_thread.start()
 
 # Subclass QMainWindow
 class MainWindow(QMainWindow):
