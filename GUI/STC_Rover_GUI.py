@@ -99,20 +99,61 @@
 
 
 # Minimal websocket example    
+# import websocket
+
+# # Replace with your ESP IP
+# ws = websocket.WebSocket()
+# ws.connect("ws://192.168.0.50/ws")
+
+# # Send motor commands
+# # ws.send("motor/0/on/128")  # turn motor 0 on with speed 128
+# # ws.send("motor/1/off")     # turn motor 1 off
+# while True:
+#     cmd = input("Enter command or 'exit' to quit: ")
+#     if cmd.lower() == 'exit':
+#         break
+#     ws.send(cmd)
+
+# # Close when done
+# ws.close()
+
+
+
 import websocket
+import threading
 
 # Replace with your ESP IP
 ws = websocket.WebSocket()
 ws.connect("ws://192.168.0.50/ws")
 
+# Function to receive messages in background
+def receive_messages():
+    try:
+        while True:
+            msg = ws.recv()  # This blocks and waits for messages from server
+            if not msg:
+                print("Connection closed by server")
+                break
+            print(f"Server: {msg}")
+    except websocket.WebSocketConnectionClosedException:
+        print("WebSocket disconnected")
+    except Exception as e:
+        print(f"Error receiving: {e}")
+
+# Start receive thread
+receive_thread = threading.Thread(target=receive_messages, daemon=True)
+receive_thread.start()
+
 # Send motor commands
-# ws.send("motor/0/on/128")  # turn motor 0 on with speed 128
-# ws.send("motor/1/off")     # turn motor 1 off
 while True:
     cmd = input("Enter command or 'exit' to quit: ")
     if cmd.lower() == 'exit':
         break
-    ws.send(cmd)
+    try:
+        ws.send(cmd)
+    except Exception as e:
+        print(f"Send failed: {e}")
+        break
 
 # Close when done
 ws.close()
