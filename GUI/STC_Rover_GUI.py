@@ -28,22 +28,22 @@ from PyQt6.QtWidgets import (
     QSlider
 )
 
-def receive_messages():
-    try:
-        while True:
-            msg = ws.recv()  # Blocks and waits for messages from server
-            if not msg:
-                print("Connection closed by server")
-                break
-            print(f"Server: {msg}")
-    except websocket.WebSocketConnectionClosedException:
-        print("WebSocket disconnected")
-    except Exception as e:
-        print(f"Error receiving: {e}")
+# def receive_messages():
+#     try:
+#         while True:
+#             msg = ws.recv()  # Blocks and waits for messages from server
+#             if not msg:
+#                 print("Connection closed by server")
+#                 break
+#             print(f"Server: {msg}")
+#     except websocket.WebSocketConnectionClosedException:
+#         print("WebSocket disconnected")
+#     except Exception as e:
+#         print(f"Error receiving: {e}")
 
-# Start receive thread
-receive_thread = threading.Thread(target=receive_messages, daemon=True)
-receive_thread.start()
+# # Start receive thread
+# receive_thread = threading.Thread(target=receive_messages, daemon=True)
+# receive_thread.start()
 
 # Subclass QMainWindow
 class MainWindow(QMainWindow):
@@ -54,6 +54,7 @@ class MainWindow(QMainWindow):
         self.setWindowTitle("STC Rover Control GUI")
 
         layout = QVBoxLayout()
+        self.direction = 0 # Default forward
 
         # First Vertical slider
         self.slider0 = QSlider(Qt.Orientation.Vertical)
@@ -81,10 +82,17 @@ class MainWindow(QMainWindow):
             lambda s: self.motor_control(1, s)
         )
 
+        self.reverse_button = QCheckBox("REVERSE")
+        self.reverse_button.setCheckState(Qt.CheckState.Unchecked)
+        self.reverse_button.stateChanged.connect(
+            self.update_direction
+        )
+
         # Layout
         layout = QHBoxLayout()
         layout.addWidget(self.motor0check)
         layout.addWidget(self.motor1check)
+        layout.addWidget(self.reverse_button)
         layout.addWidget(self.slider0)
         layout.addWidget(self.slider1)
 
@@ -92,15 +100,23 @@ class MainWindow(QMainWindow):
         container.setLayout(layout)
         self.setCentralWidget(container)
 
+    def update_direction(self, state):
+        if state == Qt.CheckState.Checked.value:
+            self.direction = 1 # Reverse
+            print(f"self.direction: {self.direction}")
+        else:
+            self.direction = 0 # Forward
+            print(f"self.direction: {self.direction}")
+
     def update_speed0(self, value):
         print(f"Speed0 set to {value}")
         if self.motor0check.isChecked():
-            ws.send(f"/motor/0/on/{value}")
+            ws.send(f"/motor/0/on/{value}/{self.direction}")
 
     def update_speed1(self, value):
         print(f"Speed1 set to {value}")
         if self.motor1check.isChecked():
-            ws.send(f"/motor/1/on/{value}")
+            ws.send(f"/motor/1/on/{value}/{self.direction}")
 
     def motor_control(self, motor, state):
         # pick the correct slider
@@ -108,7 +124,7 @@ class MainWindow(QMainWindow):
         value = slider.value()
 
         if state == Qt.CheckState.Checked.value:
-            ws.send(f"/motor/{motor}/on/{value}")
+            ws.send(f"/motor/{motor}/on/{value}/{self.direction}")
         else:
             ws.send(f"/motor/{motor}/off")
 
