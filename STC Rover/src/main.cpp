@@ -90,36 +90,33 @@ void onWebSocketEvent(
             motor_off(1);
         }
     }
-    else if (type == WS_EVT_DATA) {
-        data[len] = 0;                 // null-terminate
-        String msg = (char*)data;
-        msg.trim();
-        Serial.println(msg);
 
-        int idx;
-        if ((idx = msg.indexOf("/motor/0/on/")) != -1) {
-            // Extract everything after "/motor/0/on/"
-            String speedStr = msg.substring(idx + String("/motor/0/on/").length());
-            speedStr.trim();               // remove any trailing \r, \n, spaces
-            int speed, direction;
-            sscanf(speedStr.c_str(), "%d/%d", &speed, &direction);
-            Serial.printf("Motor 0 Speed: %d\n", speed); // Debug
-            motor_on(0, speed, direction);
+    else if (type == WS_EVT_DATA) { // data received
+        AwsFrameInfo *info = (AwsFrameInfo*)arg;
+        if(info->final && info->len == 5 && info->opcode == WS_BINARY) {
+            byte opcode       = data[0];
+            byte motor_number = data[1];
+            byte power        = data[2];
+            byte pwm          = data[3];
+            byte direction    = data[4];
+
+            Serial.print("Opcode: "); Serial.println(opcode);
+            Serial.print("Motor: "); Serial.println(motor_number);
+            Serial.print("Power: "); Serial.println(power);
+            Serial.print("PWM: "); Serial.println(pwm);
+            Serial.print("Direction: "); Serial.println(direction); Serial.println("\n");
+
+            if(!opcode){ // Motor opcode = 0000
+                if (power){
+                    motor_on(motor_number, pwm, direction);
+                }
+                else{
+                    motor_off(motor_number);
+                }
+            }
         }
-        if ((idx = msg.indexOf("/motor/1/on/")) != -1) {
-            String speedStr = msg.substring(idx + String("/motor/1/on/").length());
-            speedStr.trim();
-            int speed, direction;
-            sscanf(speedStr.c_str(), "%d/%d", &speed, &direction);
-            Serial.printf("Motor 1 Speed: %d\n", speed);
-            motor_on(1, speed, direction);
-        }
-
-        // Turn motors off (no speed needed)
-        if (msg.indexOf("/motor/0/off") != -1) motor_off(0);
-        if (msg.indexOf("/motor/1/off") != -1) motor_off(1);
-
     }
+    
     else if (type == WS_EVT_PONG) {
         // Client responded to our ping - connection is alive
         Serial.printf("Pong received from client %u\n", client->id()); 
