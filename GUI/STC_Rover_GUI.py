@@ -15,8 +15,13 @@ import sys
 import websocket
 
 ws = websocket.WebSocket()
-# ws.connect("ws://192.168.0.50/ws")
-ws.connect("ws://stc_esp.local:81/ws")
+try:
+    ws.connect("ws://stc_esp.local:81/ws")
+    ws_connected = True
+except Exception as e:
+    print("WebSocket connection failed:", e)
+    ws_connected = False
+    sys.exit(1)
 
 from PyQt6.QtCore import Qt
 from PyQt6.QtWidgets import (
