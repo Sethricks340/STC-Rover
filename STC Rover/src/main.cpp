@@ -34,44 +34,40 @@ const int resolution = 8;
 unsigned long lastPingTime = 0;
 const unsigned long PING_INTERVAL = 500; // Send ping at 2 Hz
 
-void motor_on(int number, int pwm, int direction){
-  if (number){
-    if (direction){
-        digitalWrite(IN3, LOW);
-        digitalWrite(IN4, HIGH);
-        ledcWrite(channelB, pwm); 
+void motor_on(int number, int pwm, int direction) {
+    int inA, inB, channel;
+
+    if (number) { // Motor 1
+        inA = IN3;
+        inB = IN4;
+        channel = channelB;
+    } else {      // Motor 0
+        inA = IN1;
+        inB = IN2;
+        channel = channelA;
     }
-    else {
-        digitalWrite(IN3, HIGH);
-        digitalWrite(IN4, LOW);
-        ledcWrite(channelB, pwm); 
-    }
-  }
-  else {
-    if (direction){
-        digitalWrite(IN1, LOW);
-        digitalWrite(IN2, HIGH);
-        ledcWrite(channelA, pwm); 
-    }
-    else {
-        digitalWrite(IN1, HIGH);
-        digitalWrite(IN2, LOW);
-        ledcWrite(channelA, pwm); 
-    }
-  }
+
+    digitalWrite(inA, direction ? LOW : HIGH);
+    digitalWrite(inB, direction ? HIGH : LOW);
+    ledcWrite(channel, pwm);
 }
 
-void motor_off(int number){
-  if (number){
-    digitalWrite(IN3, LOW);
-    digitalWrite(IN4, LOW);
-    ledcWrite(channelB, 0);
-  }
-  else {
-    digitalWrite(IN1, LOW);
-    digitalWrite(IN2, LOW);
-    ledcWrite(channelA, 0);
-  }
+void motor_off(int number) {
+    int inA, inB, channel;
+
+    if (number) {
+        inA = IN3;
+        inB = IN4;
+        channel = channelB;
+    } else {
+        inA = IN1;
+        inB = IN2;
+        channel = channelA;
+    }
+
+    digitalWrite(inA, LOW);
+    digitalWrite(inB, LOW);
+    ledcWrite(channel, 0);
 }
 
 // WebSocket event handler
