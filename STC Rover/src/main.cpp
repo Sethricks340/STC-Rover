@@ -1,4 +1,5 @@
 // TODO: Make so only one client at a time can connect
+// TODO: Add directional control
 
 #include <WiFi.h>
 #include <Arduino.h>
