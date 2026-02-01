@@ -1,5 +1,4 @@
 // TODO: Make so only one client at a time can connect
-// Change Static IP so it works on any network, on GUI as well
 
 #include <WiFi.h>
 #include <Arduino.h>
@@ -29,6 +28,7 @@ const int resolution = 8;
 
 unsigned long lastPingTime = 0;
 const unsigned long PING_INTERVAL = 500; // Send ping at 2 Hz
+uint32_t activeClientId = 0;
 
 void motor_on(int number, int pwm, int direction) {
     int inA, inB, channel;
@@ -77,12 +77,22 @@ void onWebSocketEvent(
 ) {
 
     if (type == WS_EVT_CONNECT) {
-        Serial.printf("Client connected: %u\n", client->id());
+
+        if (activeClientId != 0){
+            Serial.printf("Rejecting client %u, already connected to client %u\n"),
+                client->id(), activeClientId;
+                client->close();
+                return;
+        }
+        activeClientId = client->id();
+        Serial.printf("Client connected: %u\n", activeClientId);
     }
+
     else if (type == WS_EVT_DISCONNECT) {
         Serial.printf("Client disconnected: %u\n", client->id());
         if (ws.count() == 0) {
             Serial.println("No clients connected");
+            activeClientId = 0;
             motor_off(0);
             motor_off(1);
         }
@@ -91,6 +101,9 @@ void onWebSocketEvent(
     else if (type == WS_EVT_DATA) { // data received
         AwsFrameInfo *info = (AwsFrameInfo*)arg;
         if(info->final && info->len == 5 && info->opcode == WS_BINARY) {
+
+            if (client->id() != activeClientId) return;
+
             byte opcode       = data[0];
             byte motor_number = data[1];
             byte power        = data[2];
@@ -104,12 +117,8 @@ void onWebSocketEvent(
             Serial.print("Direction: "); Serial.println(direction); Serial.println("\n");
 
             if(!opcode){ // Motor opcode = 0000
-                if (power){
-                    motor_on(motor_number, pwm, direction);
-                }
-                else{
-                    motor_off(motor_number);
-                }
+                if (power) motor_on(motor_number, pwm, direction);
+                else motor_off(motor_number);
             }
         }
     }
