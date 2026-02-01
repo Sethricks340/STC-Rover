@@ -4,19 +4,14 @@
 #include <WiFi.h>
 #include <Arduino.h>
 #include <ESPAsyncWebServer.h>
+#include <ESPmDNS.h>
 
 // WiFi credentials
 const char* ssid = "Threat Level Midnight";
 const char* password = "cowabunga2!!";
 
-// Static IP config
-IPAddress local_IP(192,168,0,50);
-IPAddress gateway(192,168,0,1);
-IPAddress subnet(255,255,255,0);
-IPAddress dns(8,8,8,8);
-
 // WebSocket server
-AsyncWebServer server(80);
+AsyncWebServer server(81);
 AsyncWebSocket ws("/ws");
 
 const int IN1 = 19;
@@ -80,6 +75,7 @@ void onWebSocketEvent(
     uint8_t *data,
     size_t len
 ) {
+
     if (type == WS_EVT_CONNECT) {
         Serial.printf("Client connected: %u\n", client->id());
     }
@@ -138,14 +134,15 @@ void setup() {
     pinMode(IN3, OUTPUT);
     pinMode(IN4, OUTPUT);
 
-    if (!WiFi.config(local_IP, gateway, subnet, dns)) {
-        Serial.println("Static IP config failed");
-    }
-
     WiFi.begin(ssid, password);
     while (WiFi.status() != WL_CONNECTED) {
         delay(500);
         Serial.print(".");
+    }
+
+    // Start mDNS for friendly hostname
+    if (MDNS.begin("stc_esp")) {
+        Serial.println("mDNS started: stc_esp.local");
     }
 
     Serial.println();
