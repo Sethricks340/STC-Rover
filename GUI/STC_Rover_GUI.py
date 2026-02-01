@@ -1,14 +1,14 @@
-# # TODO: Things the GUI might have:
-#     # Camera Feed
-#     # Camera Direction Gimball
-#     # 4-Directional Directional Control
-#     # Motor Speed control
-#     # Cellular connectivity status
-#     # GPS location
-#     # Battery life
-# # If ESP not connected, GUI crashes
-# GUI can't come on until ESP is on network
-# # Add irectional Control (backwards/ forwards)
+# TODO: Things the GUI might have:
+    # Camera Feed
+    # Camera Direction Gimball
+    # 4-Directional Directional Control
+    # Motor Speed control
+    # Cellular connectivity status
+    # GPS location
+    # Battery life
+# If ESP not connected, GUI crashes
+# If try to connect GUI first, get this: Error receiving: [WinError 10054] An existing connection was forcibly closed by the remote host
+# Add directional Control (backwards/ forwards)
 
 import sys
 import websocket
