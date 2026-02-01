@@ -8,8 +8,6 @@
     # Battery life
 # If ESP not connected, GUI crashes
 # If try to connect GUI first, get this: Error receiving: [WinError 10054] An existing connection was forcibly closed by the remote host
-# Add directional Control (backwards/ forwards)
-# Directional control updates motors without changing slider
 
 import sys
 import websocket
@@ -38,38 +36,34 @@ class MainWindow(QMainWindow):
 
         layout = QVBoxLayout()
         self.direction = 0 # Default forward
+        self.motor_enabled = [False, False]
+        self.motor_speed = [0,0]
 
         # First Vertical slider
         self.slider0 = QSlider(Qt.Orientation.Vertical)
         self.slider0.setMinimum(0)
         self.slider0.setMaximum(255)
         self.slider0.setValue(0)
-        self.slider0.valueChanged.connect(self.update_speed0)
+        self.slider0.valueChanged.connect(lambda s: self.update_speed(0, s))
 
         # Second Vertical slider
         self.slider1 = QSlider(Qt.Orientation.Vertical)
         self.slider1.setMinimum(0)
         self.slider1.setMaximum(255)
         self.slider1.setValue(0)
-        self.slider1.valueChanged.connect(self.update_speed1)
+        self.slider1.valueChanged.connect(lambda s: self.update_speed(1, s))
 
         self.motor0check = QCheckBox("MOTOR 0 ON")
         self.motor0check.setCheckState(Qt.CheckState.Unchecked)
-        self.motor0check.stateChanged.connect(
-            lambda s: self.motor_control(0, s)
-        )
+        self.motor0check.stateChanged.connect(lambda s: self.motor_toggle(0, s))    
         
         self.motor1check = QCheckBox("MOTOR 1 ON")
         self.motor1check.setCheckState(Qt.CheckState.Unchecked)
-        self.motor1check.stateChanged.connect(
-            lambda s: self.motor_control(1, s)
-        )
+        self.motor1check.stateChanged.connect(lambda s: self.motor_toggle(1, s))   
 
         self.reverse_button = QCheckBox("REVERSE")
         self.reverse_button.setCheckState(Qt.CheckState.Unchecked)
-        self.reverse_button.stateChanged.connect(
-            self.update_direction
-        )
+        self.reverse_button.stateChanged.connect(self.update_direction)
 
         # Layout
         layout = QHBoxLayout()
@@ -83,34 +77,24 @@ class MainWindow(QMainWindow):
         container.setLayout(layout)
         self.setCentralWidget(container)
 
+    def update_speed(self, motor, value):
+        self.motor_speed[motor] = value
+        self.send_motor(motor)
+
+    def motor_toggle(self, motor, state):
+        self.motor_enabled[motor] = (state == Qt.CheckState.Checked.value)
+        self.send_motor(motor)
+
     def update_direction(self, state):
-        if state == Qt.CheckState.Checked.value:
-            self.direction = 1 # Reverse
-            print(f"self.direction: {self.direction}")
-        else:
-            self.direction = 0 # Forward
-            print(f"self.direction: {self.direction}")
+        self.direction = 1 if state == Qt.CheckState.Checked.value else 0
+        self.send_motor(0)
+        self.send_motor(1)
 
-    def update_speed0(self, value):
-        print(f"Speed0 set to {value}")
-        if self.motor0check.isChecked():
-            ws.send(f"/motor/0/on/{value}/{self.direction}")
-
-    def update_speed1(self, value):
-        print(f"Speed1 set to {value}")
-        if self.motor1check.isChecked():
-            ws.send(f"/motor/1/on/{value}/{self.direction}")
-
-    def motor_control(self, motor, state):
-        # pick the correct slider
-        slider = self.slider0 if motor == 0 else self.slider1
-        value = slider.value()
-
-        if state == Qt.CheckState.Checked.value:
-            ws.send(f"/motor/{motor}/on/{value}/{self.direction}")
-        else:
+    def send_motor(self, motor):
+        if not self.motor_enabled[motor]:
             ws.send(f"/motor/{motor}/off")
-
+            return
+        ws.send(f"/motor/{motor}/on/{self.motor_speed[motor]}/{self.direction}")
     
 app = QApplication(sys.argv)
 window = MainWindow()
