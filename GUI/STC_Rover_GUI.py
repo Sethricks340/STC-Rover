@@ -7,8 +7,8 @@
     # GPS location
     # Battery life
 # Known Issues:
-# If ESP not connected, GUI crashes
 # If doesn't actually connect (client rejected), still getting the GUI
+# If lose connection with ESP, don't know. GUI keeps going with no alert
 
 import sys
 import websocket
