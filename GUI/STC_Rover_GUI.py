@@ -6,8 +6,10 @@
     # Cellular connectivity status
     # GPS location
     # Battery life
+# Known Issues:
 # If ESP not connected, GUI crashes
 # If try to connect GUI first, get this: Error receiving: [WinError 10054] An existing connection was forcibly closed by the remote host
+# If doesn't actually connect (client rejected), still getting the GUI
 
 import sys
 import websocket
