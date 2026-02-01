@@ -1,5 +1,4 @@
 // TODO: Make so only one client at a time can connect
-// TODO: Add directional control
 
 #include <WiFi.h>
 #include <Arduino.h>
@@ -32,18 +31,33 @@ const int channelA = 0;
 const int channelB = 1;
 const int resolution = 8; 
 
-void motor_on(int number, int pwm){
+unsigned long lastPingTime = 0;
+const unsigned long PING_INTERVAL = 500; // Send ping at 2 Hz
+
+void motor_on(int number, int pwm, int direction){
   if (number){
-    digitalWrite(IN3, LOW);
-    digitalWrite(IN4, HIGH);
-    ledcWrite(channelB, pwm); 
-    // ledcWrite(channelB, 255); 
+    if (direction){
+        digitalWrite(IN3, LOW);
+        digitalWrite(IN4, HIGH);
+        ledcWrite(channelB, pwm); 
+    }
+    else {
+        digitalWrite(IN3, HIGH);
+        digitalWrite(IN4, LOW);
+        ledcWrite(channelB, pwm); 
+    }
   }
   else {
-    digitalWrite(IN1, LOW);
-    digitalWrite(IN2, HIGH);
-    ledcWrite(channelA, pwm); 
-    // ledcWrite(channelA, 255); 
+    if (direction){
+        digitalWrite(IN1, LOW);
+        digitalWrite(IN2, HIGH);
+        ledcWrite(channelA, pwm); 
+    }
+    else {
+        digitalWrite(IN1, HIGH);
+        digitalWrite(IN2, LOW);
+        ledcWrite(channelA, pwm); 
+    }
   }
 }
 
@@ -91,16 +105,18 @@ void onWebSocketEvent(
             // Extract everything after "/motor/0/on/"
             String speedStr = msg.substring(idx + String("/motor/0/on/").length());
             speedStr.trim();               // remove any trailing \r, \n, spaces
-            int speed = speedStr.toInt();  // convert to integer
+            int speed, direction;
+            sscanf(speedStr.c_str(), "%d/%d", &speed, &direction);
             Serial.printf("Motor 0 Speed: %d\n", speed); // Debug
-            motor_on(0, speed);
+            motor_on(0, speed, direction);
         }
         if ((idx = msg.indexOf("/motor/1/on/")) != -1) {
             String speedStr = msg.substring(idx + String("/motor/1/on/").length());
             speedStr.trim();
-            int speed = speedStr.toInt();
+            int speed, direction;
+            sscanf(speedStr.c_str(), "%d/%d", &speed, &direction);
             Serial.printf("Motor 1 Speed: %d\n", speed);
-            motor_on(1, speed);
+            motor_on(1, speed, direction);
         }
 
         // Turn motors off (no speed needed)
@@ -110,8 +126,7 @@ void onWebSocketEvent(
     }
     else if (type == WS_EVT_PONG) {
         // Client responded to our ping - connection is alive
-        Serial.printf("Pong received from client %u\n", client->id());
-        // lastPongTime = millis();
+        Serial.printf("Pong received from client %u\n", client->id()); 
     }
 }
 
@@ -147,10 +162,6 @@ void setup() {
     server.addHandler(&ws);
     server.begin();
 }
-
-unsigned long lastPingTime = 0;
-const unsigned long PING_INTERVAL = 1000; // Send ping every second
-unsigned long lastPongTime = 0;
 
 void loop() {
     // Send ping to all connected clients every 1 second
