@@ -11,7 +11,6 @@
 # # Add irectional Control (backwards/ forwards)
 
 import sys
-import requests
 import websocket
 import threading
 
@@ -32,7 +31,7 @@ from PyQt6.QtWidgets import (
 def receive_messages():
     try:
         while True:
-            msg = ws.recv()  # This blocks and waits for messages from server
+            msg = ws.recv()  # Blocks and waits for messages from server
             if not msg:
                 print("Connection closed by server")
                 break
@@ -46,7 +45,7 @@ def receive_messages():
 receive_thread = threading.Thread(target=receive_messages, daemon=True)
 receive_thread.start()
 
-# Subclass QMainWindow to customize application's main window
+# Subclass QMainWindow
 class MainWindow(QMainWindow):
 
     def __init__(self):
@@ -96,13 +95,11 @@ class MainWindow(QMainWindow):
     def update_speed0(self, value):
         print(f"Speed0 set to {value}")
         if self.motor0check.isChecked():
-            # requests.get(f"http://192.168.0.50/motor/0/on/{value}")
             ws.send(f"motor/0/{value}")
 
     def update_speed1(self, value):
         print(f"Speed1 set to {value}")
         if self.motor1check.isChecked():
-            # requests.get(f"http://192.168.0.50/motor/1/on/{value}")
             ws.send(f"motor/1/{value}")
 
     def motor_control(self, motor, state):
@@ -111,10 +108,8 @@ class MainWindow(QMainWindow):
         value = slider.value()
 
         if state == Qt.CheckState.Checked.value:
-            # requests.get(f"http://192.168.0.50/motor/{motor}/on/{value}")
             ws.send(f"motor/{motor}/on/{value}")
         else:
-            # requests.get(f"http://192.168.0.50/motor/{motor}/off")
             ws.send(f"motor/{motor}/off")
 
     
