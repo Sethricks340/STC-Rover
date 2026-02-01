@@ -13,7 +13,8 @@ import sys
 import websocket
 
 ws = websocket.WebSocket()
-ws.connect("ws://192.168.0.50/ws")
+# ws.connect("ws://192.168.0.50/ws")
+ws.connect("ws://stc_esp.local:81/ws")
 
 from PyQt6.QtCore import Qt
 from PyQt6.QtWidgets import (
