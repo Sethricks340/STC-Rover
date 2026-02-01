@@ -1,4 +1,5 @@
 // TODO: Make so only one client at a time can connect
+// Change Static IP so it works on any network, on GUI as well
 
 #include <WiFi.h>
 #include <Arduino.h>
