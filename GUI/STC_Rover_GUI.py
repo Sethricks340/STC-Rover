@@ -95,12 +95,12 @@ class MainWindow(QMainWindow):
     def update_speed0(self, value):
         print(f"Speed0 set to {value}")
         if self.motor0check.isChecked():
-            ws.send(f"motor/0/{value}")
+            ws.send(f"/motor/0/on/{value}")
 
     def update_speed1(self, value):
         print(f"Speed1 set to {value}")
         if self.motor1check.isChecked():
-            ws.send(f"motor/1/{value}")
+            ws.send(f"/motor/1/on/{value}")
 
     def motor_control(self, motor, state):
         # pick the correct slider
@@ -108,9 +108,9 @@ class MainWindow(QMainWindow):
         value = slider.value()
 
         if state == Qt.CheckState.Checked.value:
-            ws.send(f"motor/{motor}/on/{value}")
+            ws.send(f"/motor/{motor}/on/{value}")
         else:
-            ws.send(f"motor/{motor}/off")
+            ws.send(f"/motor/{motor}/off")
 
     
 app = QApplication(sys.argv)
