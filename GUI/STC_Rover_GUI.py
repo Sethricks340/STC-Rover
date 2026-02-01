@@ -38,6 +38,7 @@ class MainWindow(QMainWindow):
         self.direction = 0 # Default forward
         self.motor_enabled = [False, False]
         self.motor_speed = [0,0]
+        self.motor_opcode = 0000
 
         # First Vertical slider
         self.slider0 = QSlider(Qt.Orientation.Vertical)
@@ -87,14 +88,16 @@ class MainWindow(QMainWindow):
 
     def update_direction(self, state):
         self.direction = 1 if state == Qt.CheckState.Checked.value else 0
-        self.send_motor(0)
-        self.send_motor(1)
+        if self.motor_enabled[0]: self.send_motor(0)
+        if self.motor_enabled[1]: self.send_motor(1)
 
     def send_motor(self, motor):
         if not self.motor_enabled[motor]:
-            ws.send(f"/motor/{motor}/off")
-            return
-        ws.send(f"/motor/{motor}/on/{self.motor_speed[motor]}/{self.direction}")
+            binary_msg = bytes([self.motor_opcode, motor, 0, self.motor_speed[motor], self.direction])
+        else:
+            binary_msg = bytes([self.motor_opcode, motor, 1, self.motor_speed[motor], self.direction])
+
+        ws.send(binary_msg, opcode=websocket.ABNF.OPCODE_BINARY)
     
 app = QApplication(sys.argv)
 window = MainWindow()
