@@ -42,55 +42,21 @@ class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
 
-        self.setWindowTitle("STC Rover Control GUI")
+        self.setWindowTitle("STC Rover")
 
         layout = QVBoxLayout()
-        self.direction = 0 # Default forward
-        self.motor_enabled = [False, False]
-        self.motor_speed = [0,0]
         self.motor_opcode = 0000
-
-        # First Vertical slider
-        self.slider0 = QSlider(Qt.Orientation.Vertical)
-        self.slider0.setMinimum(0)
-        self.slider0.setMaximum(255)
-        self.slider0.setValue(0)
-        self.slider0.valueChanged.connect(lambda s: self.update_speed(0, s))
-
-        # Second Vertical slider
-        self.slider1 = QSlider(Qt.Orientation.Vertical)
-        self.slider1.setMinimum(0)
-        self.slider1.setMaximum(255)
-        self.slider1.setValue(0)
-        self.slider1.valueChanged.connect(lambda s: self.update_speed(1, s))
-
-        self.motor0check = QCheckBox("MOTOR 0 ON")
-        self.motor0check.setCheckState(Qt.CheckState.Unchecked)
-        self.motor0check.stateChanged.connect(lambda s: self.motor_toggle(0, s))    
-        
-        self.motor1check = QCheckBox("MOTOR 1 ON")
-        self.motor1check.setCheckState(Qt.CheckState.Unchecked)
-        self.motor1check.stateChanged.connect(lambda s: self.motor_toggle(1, s))   
-
-        self.reverse_button = QCheckBox("REVERSE")
-        self.reverse_button.setCheckState(Qt.CheckState.Unchecked)
-        self.reverse_button.stateChanged.connect(self.update_direction)
 
         # Layout
         layout = QHBoxLayout()
-        layout.addWidget(self.motor0check)
-        layout.addWidget(self.motor1check)
-        layout.addWidget(self.reverse_button)
-        layout.addWidget(self.slider0)
-        layout.addWidget(self.slider1)
 
         # Motion Control Joystick
         joystick_container = QWidget()
         joystick_layout = QVBoxLayout()
         self.joystick = Joystick("blue", "lightgray")
-        self.joystick.moved.connect(self.joystick_moved)
-        joystick_layout.addWidget(self.joystick)
+        self.joystick.moved.connect(self.motor_joystick_moved)
         joystick_layout.addWidget(QLabel("Motion Control", alignment=Qt.AlignmentFlag.AlignCenter))
+        joystick_layout.addWidget(self.joystick)
         joystick_container.setLayout(joystick_layout)
         layout.addWidget(joystick_container)
 
@@ -98,41 +64,30 @@ class MainWindow(QMainWindow):
         joystick_container2 = QWidget()
         joystick_layout2 = QVBoxLayout()
         self.joystick2 = Joystick("lightgray", "blue")
-        self.joystick2.moved.connect(self.joystick2_moved)
-        joystick_layout2.addWidget(self.joystick2)
+        self.joystick2.moved.connect(self.camera_joystick_moved)
         joystick_layout2.addWidget(QLabel("Camera Control", alignment=Qt.AlignmentFlag.AlignCenter))
+        joystick_layout2.addWidget(self.joystick2)
         joystick_container2.setLayout(joystick_layout2)
         layout.addWidget(joystick_container2)
 
         container = QWidget()
         container.setLayout(layout)
         self.setCentralWidget(container)
-
-    def update_speed(self, motor, value):
-        self.motor_speed[motor] = value
-        self.send_motor(motor)
-
-    def motor_toggle(self, motor, state):
-        self.motor_enabled[motor] = (state == Qt.CheckState.Checked.value)
-        self.send_motor(motor)
-
-    def update_direction(self, state):
-        self.direction = 1 if state == Qt.CheckState.Checked.value else 0
-        if self.motor_enabled[0]: self.send_motor(0)
-        if self.motor_enabled[1]: self.send_motor(1)
-
-    def send_motor(self, motor):
-        if not self.motor_enabled[motor]:
-            binary_msg = bytes([self.motor_opcode, motor, 0, self.motor_speed[motor], self.direction])
-        else:
-            binary_msg = bytes([self.motor_opcode, motor, 1, self.motor_speed[motor], self.direction])
-
-        ws.send(binary_msg, opcode=websocket.ABNF.OPCODE_BINARY)
     
-    def joystick_moved(self, x, y):
-        print(f"Joystick 1 X={x:.2f}, Y={y:.2f}")
+    def motor_joystick_moved(self, x, y):
+        print(f"Joystick 2 X={x:.2f}, Y={y:.2f}")
+        def send(motor, value):
+            speed = int(abs(value) * 255)
+            power = 0 if value == 0 else 1
+            direction = 1 if value < 0 else 0
+                # binary_msg = bytes([opcode, motor#, power, speed, direction])
+            msg = bytes([self.motor_opcode, motor, power, speed if power else 0, direction if power else 0])
+            ws.send(msg, opcode=websocket.ABNF.OPCODE_BINARY)
+        send(0, x)
+        send(1, y)
 
-    def joystick2_moved(self, x, y):
+    def camera_joystick_moved(self, x, y):
+        # For camera
         print(f"Joystick 2 X={x:.2f}, Y={y:.2f}")
 
 class Joystick(QWidget):
