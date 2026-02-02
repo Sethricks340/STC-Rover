@@ -14,7 +14,7 @@
 import sys
 import websocket
 from PyQt6.QtGui import QPainter, QBrush, QColor
-from PyQt6.QtCore import Qt, QPoint
+from PyQt6.QtCore import Qt, QPoint, pyqtSignal
 import math
 from PyQt6.QtWidgets import (
     QApplication,
@@ -23,7 +23,8 @@ from PyQt6.QtWidgets import (
     QWidget,
     QVBoxLayout,
     QHBoxLayout,
-    QSlider
+    QSlider,
+    QLabel
 )
 
 ws = websocket.WebSocket()
@@ -83,12 +84,25 @@ class MainWindow(QMainWindow):
         layout.addWidget(self.slider0)
         layout.addWidget(self.slider1)
 
+        # Motion Control Joystick
+        joystick_container = QWidget()
+        joystick_layout = QVBoxLayout()
         self.joystick = Joystick("blue", "lightgray")
-        # self.joystick.on_move = self.joystick_move  # callback // TODO: Uncomment this
-        layout.addWidget(self.joystick)
+        self.joystick.moved.connect(self.joystick_moved)
+        joystick_layout.addWidget(self.joystick)
+        joystick_layout.addWidget(QLabel("Motion Control", alignment=Qt.AlignmentFlag.AlignCenter))
+        joystick_container.setLayout(joystick_layout)
+        layout.addWidget(joystick_container)
 
-        self.joystick1 = Joystick("lightgray", "blue")
-        layout.addWidget(self.joystick1)
+        # Camera Control Joystick
+        joystick_container2 = QWidget()
+        joystick_layout2 = QVBoxLayout()
+        self.joystick2 = Joystick("lightgray", "blue")
+        self.joystick2.moved.connect(self.joystick2_moved)
+        joystick_layout2.addWidget(self.joystick2)
+        joystick_layout2.addWidget(QLabel("Camera Control", alignment=Qt.AlignmentFlag.AlignCenter))
+        joystick_container2.setLayout(joystick_layout2)
+        layout.addWidget(joystick_container2)
 
         container = QWidget()
         container.setLayout(layout)
@@ -115,7 +129,14 @@ class MainWindow(QMainWindow):
 
         ws.send(binary_msg, opcode=websocket.ABNF.OPCODE_BINARY)
     
+    def joystick_moved(self, x, y):
+        print(f"Joystick 1 X={x:.2f}, Y={y:.2f}")
+
+    def joystick2_moved(self, x, y):
+        print(f"Joystick 2 X={x:.2f}, Y={y:.2f}")
+
 class Joystick(QWidget):
+    moved = pyqtSignal(float, float)
     def __init__(self, center_color="blue", outer_color="lightgray"):
         super().__init__()
         self.setFixedSize(200, 200)
@@ -144,7 +165,8 @@ class Joystick(QWidget):
     def mouseReleaseEvent(self, event):
         self.knob = self.center
         self.update()
-        print("X=0 Y=0")  # centered
+        # print("X=0 Y=0")  # centered
+        self.moved.emit(0, 0)
 
     def update_knob(self, pos):
         dx = pos.x() - self.center.x()
@@ -158,7 +180,8 @@ class Joystick(QWidget):
         # Normalize output to -1 to 1
         x_norm = dx / self.radius
         y_norm = -dy / self.radius  # invert Y to match typical joystick convention
-        print(f"X={x_norm:.2f} Y={y_norm:.2f}")
+        # print(f"X={x_norm:.2f} Y={y_norm:.2f}")
+        self.moved.emit(x_norm, y_norm)
 
 app = QApplication(sys.argv)
 window = MainWindow()
