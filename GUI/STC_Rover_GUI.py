@@ -10,6 +10,7 @@
 # If doesn't actually connect (client rejected), still getting the GUI
 # If lose connection with ESP, don't know. GUI keeps going with no alert
 # Still doesn't connect from different WIFIs :(
+# Fix motor directions (joystick up = both forward -> right now joystick up = only pair 0 on)
 
 import sys
 import websocket
