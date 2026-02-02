@@ -13,17 +13,9 @@
 
 import sys
 import websocket
-
-ws = websocket.WebSocket()
-try:
-    ws.connect("ws://stc_esp.local:81/ws")
-    ws_connected = True
-except Exception as e:
-    print("WebSocket connection failed:", e)
-    ws_connected = False
-    sys.exit(1)
-
-from PyQt6.QtCore import Qt
+from PyQt6.QtGui import QPainter, QBrush, QColor
+from PyQt6.QtCore import Qt, QPoint
+import math
 from PyQt6.QtWidgets import (
     QApplication,
     QCheckBox,
@@ -33,6 +25,15 @@ from PyQt6.QtWidgets import (
     QHBoxLayout,
     QSlider
 )
+
+ws = websocket.WebSocket()
+try:
+    ws.connect("ws://stc_esp.local:81/ws")
+    ws_connected = True
+except Exception as e:
+    print("WebSocket connection failed:", e)
+    ws_connected = False
+    # sys.exit(1) // TODO: Uncomment this
 
 # Subclass QMainWindow
 class MainWindow(QMainWindow):
@@ -82,6 +83,13 @@ class MainWindow(QMainWindow):
         layout.addWidget(self.slider0)
         layout.addWidget(self.slider1)
 
+        self.joystick = Joystick("blue", "lightgray")
+        # self.joystick.on_move = self.joystick_move  # callback // TODO: Uncomment this
+        layout.addWidget(self.joystick)
+
+        self.joystick1 = Joystick("lightgray", "blue")
+        layout.addWidget(self.joystick1)
+
         container = QWidget()
         container.setLayout(layout)
         self.setCentralWidget(container)
@@ -107,6 +115,51 @@ class MainWindow(QMainWindow):
 
         ws.send(binary_msg, opcode=websocket.ABNF.OPCODE_BINARY)
     
+class Joystick(QWidget):
+    def __init__(self, center_color="blue", outer_color="lightgray"):
+        super().__init__()
+        self.setFixedSize(200, 200)
+        self.center = QPoint(100, 100)
+        self.knob = QPoint(100, 100)
+        self.radius = 80  # radius of joystick movement
+
+        self.center_color = center_color
+        self.outer_color = outer_color
+
+    def paintEvent(self, event):
+        painter = QPainter(self)
+        # Draw base
+        painter.setBrush(QBrush(QColor(self.outer_color)))
+        painter.drawEllipse(self.center, self.radius, self.radius)
+        # Draw knob
+        painter.setBrush(QBrush(QColor(self.center_color)))
+        painter.drawEllipse(self.knob, 20, 20)
+
+    def mousePressEvent(self, event):
+        self.update_knob(event.position())
+
+    def mouseMoveEvent(self, event):
+        self.update_knob(event.position())
+
+    def mouseReleaseEvent(self, event):
+        self.knob = self.center
+        self.update()
+        print("X=0 Y=0")  # centered
+
+    def update_knob(self, pos):
+        dx = pos.x() - self.center.x()
+        dy = pos.y() - self.center.y()
+        distance = math.hypot(dx, dy)
+        if distance > self.radius:
+            dx = dx * self.radius / distance
+            dy = dy * self.radius / distance
+        self.knob = QPoint(int(self.center.x() + dx), int(self.center.y() + dy))
+        self.update()
+        # Normalize output to -1 to 1
+        x_norm = dx / self.radius
+        y_norm = -dy / self.radius  # invert Y to match typical joystick convention
+        print(f"X={x_norm:.2f} Y={y_norm:.2f}")
+
 app = QApplication(sys.argv)
 window = MainWindow()
 window.show()
