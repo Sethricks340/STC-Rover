@@ -1,4 +1,4 @@
-// TODO: Make so only one client at a time can connect
+// TODO: Still can't connect on same WIFI
 
 #include <WiFi.h>
 #include <Arduino.h>
