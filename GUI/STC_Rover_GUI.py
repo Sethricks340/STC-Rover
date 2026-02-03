@@ -83,7 +83,7 @@ class MainWindow(QMainWindow):
             direction = 1 if value < 0 else 0
                 # binary_msg = bytes([opcode, motor#, power, speed, direction])
             msg = bytes([self.motor_opcode, motor, power, speed if power else 0, direction if power else 0])
-            ws.send(msg, opcode=websocket.ABNF.OPCODE_BINARY)
+            # ws.send(msg, opcode=websocket.ABNF.OPCODE_BINARY) // TODO: uncomment this
         send(0, x)
         send(1, y)
 
@@ -144,3 +144,27 @@ window = MainWindow()
 window.show()
 app.exec()
 ws.close()
+
+
+from PyQt6.QtCore import QThread, pyqtSignal
+import serial
+
+class SerialThread(QThread):
+    data_received = pyqtSignal(int, int)
+
+    def run(self):
+        ser = serial.Serial("COM4", 115200, timeout=1)
+
+        x = y = None
+        while True:
+            line = ser.readline().decode(errors="ignore").strip()
+            if line.startswith("X:"):
+                x = int(line[2:])
+            elif line.startswith("Y:"):
+                y = int(line[2:])
+
+            if x is not None and y is not None:
+                self.data_received.emit(x, y)
+                x = y = None
+
+
