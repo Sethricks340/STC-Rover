@@ -1,17 +1,12 @@
 #define ANALOG_X_PIN A2 
 #define ANALOG_Y_PIN A3 
 
-int input_start = 0;    // The lowest number of the range input.
-int input_end = 255;    // The largest number of the range input.
-int output_start = -255; // The lowest number of the range output.
-int output_end = 255;  // The largest number of the range output.
-
 struct analog { 
-    short x, y; 
+    float x, y; 
 }; 
 
 // forward declarations
-int readAnalogAxisLevel(int pin);
+float readAnalogAxisLevel(int pin);
 
 void setup() 
 { 
@@ -32,7 +27,9 @@ void loop()
     Serial.println(stick.y); 
 } 
 
-int readAnalogAxisLevel(int pin) 
-{ 
-    return map(analogRead(pin), 0, 1023, -255, 255); 
-} 
+float readAnalogAxisLevel(int pin)
+{
+  float raw = analogRead(pin);       // 0 .. 1023
+  float scaled = (raw / 1023.0f) * 2.0f - 1.0f;  // scale to -1.0 .. 1.0
+  return scaled;
+}

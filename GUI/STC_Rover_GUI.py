@@ -40,7 +40,7 @@ except Exception as e:
     # sys.exit(1) // TODO: Uncomment this
 
 class SerialThread(QThread):
-    data_received = pyqtSignal(int, int)
+    data_received = pyqtSignal(float, float)
 
     def run(self):
         ser = serial.Serial("COM4", 115200, timeout=1)
@@ -49,9 +49,9 @@ class SerialThread(QThread):
         while True:
             line = ser.readline().decode(errors="ignore").strip()
             if line.startswith("X:"):
-                x = int(line[2:])
+                x = float(line[2:])
             elif line.startswith("Y:"):
-                y = int(line[2:])
+                y = float(line[2:])
 
             if x is not None and y is not None:
                 self.data_received.emit(x, y)
@@ -83,11 +83,11 @@ class MainWindow(QMainWindow):
         print(f"Motor Joystick X={x:.2f}, Y={y:.2f}")
 
         # Note: (Wires to the RIGHT):
-            # Middle: about -10 to 10
-            # Up: Y to +255
-            # Down: Y to -255
-            # Right: X to -255
-            # Left: X to +255
+            # Middle: about -0.05 to 0.05
+            # Up: Y to +1
+            # Down: Y to -1
+            # Right: X to -1
+            # Left: X to +1
 
         # TODO: uncomment this to send message over WIFI
         # def send(motor, value):
