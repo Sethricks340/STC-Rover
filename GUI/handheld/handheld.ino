@@ -28,8 +28,6 @@ void loop()
 
     Serial.print("Y:"); 
     Serial.println(stick.y); 
-
-    delay(200); 
 } 
 
 byte readAnalogAxisLevel(int pin) 
