@@ -17,7 +17,7 @@ void loop()
 { 
     analog stick; 
 
-    stick.x = readAnalogAxisLevel(ANALOG_X_PIN); 
+    stick.x = readAnalogAxisLevel(ANALOG_X_PIN)  * - 1.0f; // Flip x axis
     stick.y = readAnalogAxisLevel(ANALOG_Y_PIN); 
 
     Serial.print("X:"); 
