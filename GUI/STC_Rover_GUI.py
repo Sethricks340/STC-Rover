@@ -84,10 +84,10 @@ class MainWindow(QMainWindow):
 
         # Note: (Wires to the RIGHT):
             # Middle: about -10 to 10
-            # Up: Y to +127
-            # Down: Y to -128
-            # Right: X to -128
-            # Left: X to +127
+            # Up: Y to +255
+            # Down: Y to -255
+            # Right: X to -255
+            # Left: X to +255
 
         # TODO: uncomment this to send message over WIFI
         # def send(motor, value):
