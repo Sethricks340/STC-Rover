@@ -1,8 +1,4 @@
 #define Pot_PIN A0 
-
-//Variables:
-int value;
-
 #define ANALOG_X_PIN A2 
 #define ANALOG_Y_PIN A3 
 
