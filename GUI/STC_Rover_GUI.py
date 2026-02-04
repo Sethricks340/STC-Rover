@@ -41,23 +41,44 @@ try:
 except Exception as e:
     print("WebSocket connection failed:", e)
     ws_connected = False
-    sys.exit(1) 
+    # sys.exit(1) 
 
 class SerialThread(QThread):
     data_received = pyqtSignal(float, int, int)
 
     def run(self):
-        ser = serial.Serial("COM4", 115200, timeout=1)
+        ser = None
+        while ser is None:
+            try:
+                ser = serial.Serial("COM4", 115200, timeout=1)
+            except serial.SerialException:
+                print("Serial not available, retrying in 1 second...")
+                self.msleep(1000)  # wait 1 second before retrying
+
 
         x = pot = reverse = None
         while True:
-            line = ser.readline().decode(errors="ignore").strip()
+            try:
+                line = ser.readline().decode(errors="ignore").strip()
+            except Exception as e:
+                print(f"Serial read error: {e}")
+                continue  # keep trying without crashing
+
             if line.startswith("X:"):
-                x = float(line[2:])
+                try:
+                    x = float(line[2:])
+                except ValueError:
+                    continue
             elif line.startswith("P:"):
-                pot = int(line[2:])
-            elif line.startswith("R:"): # 0 is forward, subject to change.
-                reverse = int(line[2:])
+                try:
+                    pot = int(line[2:])
+                except ValueError:
+                    continue
+            elif line.startswith("R:"):
+                try:
+                    reverse = int(line[2:])
+                except ValueError:
+                    continue
 
             if x is not None and pot is not None and reverse is not None:
                 self.data_received.emit(x, pot, reverse)
