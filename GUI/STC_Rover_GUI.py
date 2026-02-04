@@ -31,8 +31,8 @@ from PyQt6.QtWidgets import (
     QLabel
 )
 
+RIGHT_MOTORS = 0
 LEFT_MOTORS = 1
-RIGHT_MOTORS = 1
 
 ws = websocket.WebSocket()
 try:
@@ -44,22 +44,24 @@ except Exception as e:
     sys.exit(1) 
 
 class SerialThread(QThread):
-    data_received = pyqtSignal(float, int)
+    data_received = pyqtSignal(float, int, int)
 
     def run(self):
         ser = serial.Serial("COM4", 115200, timeout=1)
 
-        x = pot = None
+        x = pot = reverse = None
         while True:
             line = ser.readline().decode(errors="ignore").strip()
             if line.startswith("X:"):
                 x = float(line[2:])
             elif line.startswith("P:"):
                 pot = int(line[2:])
+            elif line.startswith("R:"): # 0 is forward, subject to change.
+                reverse = int(line[2:])
 
-            if x is not None and pot is not None:
-                self.data_received.emit(x, pot)
-                x = pot = None
+            if x is not None and pot is not None and reverse is not None:
+                self.data_received.emit(x, pot, reverse)
+                x = pot = reverse = None
 
 # Subclass QMainWindow
 class MainWindow(QMainWindow):
@@ -88,7 +90,7 @@ class MainWindow(QMainWindow):
         binary_msg = bytes([self.motor_opcode, motor, 1, pot, 0])
         ws.send(binary_msg, opcode=websocket.ABNF.OPCODE_BINARY)
     
-    def control_data(self, turn, pot):
+    def control_data(self, turn, pot, reverse): # TODO: reverse unused
         # print(f"Motor Joystick X={turn:.2f}, POT={pot}")
         turn_value = max(0, int(pot * (1 - min(1, abs(turn))))) # Clamp to never larger than 1, never below 0
 
@@ -102,7 +104,7 @@ class MainWindow(QMainWindow):
             self.send(RIGHT_MOTORS, pot) # Send full to left motors
             self.send(LEFT_MOTORS, turn_value) # Turning left, slow down left motors
         else:
-            self.send(RIGHT_MOTORS, pot)  # we'll say motor 0 is RIGHT side, subject to future change
+            self.send(RIGHT_MOTORS, pot) 
             self.send(LEFT_MOTORS, pot)
 
 app = QApplication(sys.argv)

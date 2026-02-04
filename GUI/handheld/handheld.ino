@@ -1,3 +1,5 @@
+// TODO: add reverse button
+
 #define Pot_PIN A0 
 #define ANALOG_X_PIN A2 
 
@@ -27,6 +29,9 @@ void loop()
     control.pot = map(analogRead(Pot_PIN), 0, 1023, 0, 255); //Map value 0-1023 to 0-255 (PWM)
     Serial.print("P:"); 
     Serial.println(control.pot);  
+
+    Serial.print("R:"); 
+    Serial.println(0);  
     delay(50);
 } 
 
