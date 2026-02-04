@@ -1,8 +1,14 @@
+#define Pot_PIN A0 
+
+//Variables:
+int value;
+
 #define ANALOG_X_PIN A2 
 #define ANALOG_Y_PIN A3 
 
 struct analog { 
-    float x, y; 
+    float x, y;
+    int pot;
 }; 
 
 // forward declarations
@@ -10,21 +16,25 @@ float readAnalogAxisLevel(int pin);
 
 void setup() 
 { 
-    Serial.begin(115200); 
+  Serial.begin(115200); 
 } 
 
 void loop() 
 { 
-    analog stick; 
+    analog control; 
 
-    stick.x = readAnalogAxisLevel(ANALOG_X_PIN)  * - 1.0f; // Flip x axis
-    stick.y = readAnalogAxisLevel(ANALOG_Y_PIN); 
+    control.x = readAnalogAxisLevel(ANALOG_X_PIN)  * - 1.0f; // Flip x axis
+    control.y = readAnalogAxisLevel(ANALOG_Y_PIN); 
 
     Serial.print("X:"); 
-    Serial.println(stick.x); 
+    Serial.println(control.x); 
 
     Serial.print("Y:"); 
-    Serial.println(stick.y); 
+    Serial.println(control.y); 
+
+    control.pot = map(analogRead(Pot_PIN), 0, 1023, 0, 255); //Map value 0-1023 to 0-255 (PWM)
+    Serial.print("P:"); 
+    Serial.println(control.pot);  
 } 
 
 float readAnalogAxisLevel(int pin)
