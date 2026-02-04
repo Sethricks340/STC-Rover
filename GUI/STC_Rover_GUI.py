@@ -45,6 +45,7 @@ except Exception as e:
 
 class SerialThread(QThread):
     data_received = pyqtSignal(float, int, int)
+    connection_changed = pyqtSignal(bool)
 
     def run(self):
         handeld = None
@@ -53,8 +54,10 @@ class SerialThread(QThread):
                 try:
                     handeld = serial.Serial("COM4", 115200, timeout=1)
                     print("Handheld connected")
+                    self.connection_changed.emit(True)
                 except serial.SerialException:
                     print("Handheld not connected, retrying in 1 second...")
+                    self.connection_changed.emit(False)
                     self.msleep(1000)
                     continue  # try again
 
@@ -77,7 +80,8 @@ class SerialThread(QThread):
                     handeld.close()
                 except:
                     pass    
-                self.data_received.emit(0, 0, 0)
+                self.data_received.emit(0, 0, 0) # Turn off motors
+                self.connection_changed.emit(False)
                 handeld = None  # will retry connection on next loop
             except ValueError:
                 continue  # ignore bad lines
@@ -92,17 +96,26 @@ class MainWindow(QMainWindow):
 
         self.serial_thread = SerialThread()
         self.serial_thread.data_received.connect(self.control_data)
+        self.serial_thread.connection_changed.connect(self.update_handheld_status)
         self.serial_thread.start()
 
-        layout = QVBoxLayout()
         self.motor_opcode = 0  
 
-        # Layout
-        layout = QHBoxLayout()
+        #layout
+        layout = QVBoxLayout()
+
+        self.handheld_status_label = QLabel("Handheld: Not Connected")
+        layout.addWidget(self.handheld_status_label)
 
         container = QWidget()
         container.setLayout(layout)
         self.setCentralWidget(container)
+
+    def update_handheld_status(self, connected: bool):
+        if connected:
+            self.handheld_status_label.setText("Handheld: Connected")
+        else:
+            self.handheld_status_label.setText("Handheld: Disconnected")
 
     def send(self, motor, pot):
         # binary_msg = bytes([opcode, motor#, power, speed, direction])
