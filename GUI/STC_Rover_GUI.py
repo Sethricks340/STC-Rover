@@ -11,7 +11,8 @@
 # If lose connection with ESP, don't know. GUI keeps going with no alert
 # Still doesn't connect from different WIFIs :(
 # Send Handheld joystick signals to motors
-        # |-> Make directions correct
+        # |-> Test directions
+# Make button or switch for reverse
 
 import serial
 import sys
@@ -29,6 +30,9 @@ from PyQt6.QtWidgets import (
     QSlider,
     QLabel
 )
+
+LEFT_MOTORS = 1
+RIGHT_MOTORS = 1
 
 ws = websocket.WebSocket()
 try:
@@ -86,11 +90,20 @@ class MainWindow(QMainWindow):
     
     def control_data(self, turn, pot):
         # print(f"Motor Joystick X={turn:.2f}, POT={pot}")
-        if (turn >= 0.1 and turn <= -0.1): turn = 0   # Deadspot
-        if (turn > 0.1): pass # Turning right, slow down right motors
-        if (turn < 0.1): pass # Turning left, slow down left motors
-        self.send(0, pot)  # we'll say motor 0 is RIGHT side, subject to future change
-        self.send(1, pot)
+        turn_value = max(0, int(pot * (1 - min(1, abs(turn))))) # Clamp to never larger than 1, never below 0
+
+        if (-0.1 <= turn <= 0.1):  # Deadspot = 0
+            self.send(RIGHT_MOTORS, pot)  # we'll say motor 0 is RIGHT side, subject to future change
+            self.send(LEFT_MOTORS, pot)
+        elif (turn > 0.1): 
+            self.send(LEFT_MOTORS, pot) # Send full to left motors
+            self.send(RIGHT_MOTORS, turn_value) # Turning right, slow down right motors
+        elif (turn < -0.1): 
+            self.send(RIGHT_MOTORS, pot) # Send full to left motors
+            self.send(LEFT_MOTORS, turn_value) # Turning left, slow down left motors
+        else:
+            self.send(RIGHT_MOTORS, pot)  # we'll say motor 0 is RIGHT side, subject to future change
+            self.send(LEFT_MOTORS, pot)
 
 app = QApplication(sys.argv)
 window = MainWindow()
