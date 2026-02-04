@@ -80,12 +80,16 @@ class MainWindow(QMainWindow):
         self.setCentralWidget(container)
 
     def send(self, motor, pot):
+        # binary_msg = bytes([opcode, motor#, power, speed, direction])
         binary_msg = bytes([self.motor_opcode, motor, 1, pot, 0])
         ws.send(binary_msg, opcode=websocket.ABNF.OPCODE_BINARY)
     
-    def control_data(self, x, pot):
-        print(f"Motor Joystick X={x:.2f}, POT={pot}")
-        self.send(0, pot)
+    def control_data(self, turn, pot):
+        # print(f"Motor Joystick X={turn:.2f}, POT={pot}")
+        if (turn >= 0.1 and turn <= -0.1): turn = 0   # Deadspot
+        if (turn > 0.1): pass # Turning right, slow down right motors
+        if (turn < 0.1): pass # Turning left, slow down left motors
+        self.send(0, pot)  # we'll say motor 0 is RIGHT side, subject to future change
         self.send(1, pot)
 
 app = QApplication(sys.argv)
