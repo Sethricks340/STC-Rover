@@ -47,42 +47,40 @@ class SerialThread(QThread):
     data_received = pyqtSignal(float, int, int)
 
     def run(self):
-        ser = None
-        while ser is None:
-            try:
-                ser = serial.Serial("COM4", 115200, timeout=1)
-            except serial.SerialException:
-                print("Serial not available, retrying in 1 second...")
-                self.msleep(1000)  # wait 1 second before retrying
-
-
-        x = pot = reverse = None
+        handeld = None
         while True:
+            if handeld is None:
+                try:
+                    handeld = serial.Serial("COM4", 115200, timeout=1)
+                    print("Handheld connected")
+                except serial.SerialException:
+                    print("Handheld not connected, retrying in 1 second...")
+                    self.msleep(1000)
+                    continue  # try again
+
             try:
-                line = ser.readline().decode(errors="ignore").strip()
-            except Exception as e:
-                print(f"Serial read error: {e}")
-                continue  # keep trying without crashing
-
-            if line.startswith("X:"):
-                try:
+                line = handeld.readline().decode(errors="ignore").strip()
+                if line.startswith("X:"):
                     x = float(line[2:])
-                except ValueError:
-                    continue
-            elif line.startswith("P:"):
-                try:
+                elif line.startswith("P:"):
                     pot = int(line[2:])
-                except ValueError:
-                    continue
-            elif line.startswith("R:"):
-                try:
+                elif line.startswith("R:"):
                     reverse = int(line[2:])
-                except ValueError:
-                    continue
 
-            if x is not None and pot is not None and reverse is not None:
-                self.data_received.emit(x, pot, reverse)
-                x = pot = reverse = None
+                if x is not None and pot is not None and reverse is not None:
+                    self.data_received.emit(x, pot, reverse)
+                    x = pot = reverse = None
+
+            except (serial.SerialException, OSError) as e:
+                print(f"Handheld disconnected: {e}")
+                try:
+                    handeld.close()
+                except:
+                    pass    
+                self.data_received.emit(0, 0, 0)
+                handeld = None  # will retry connection on next loop
+            except ValueError:
+                continue  # ignore bad lines
 
 # Subclass QMainWindow
 class MainWindow(QMainWindow):
