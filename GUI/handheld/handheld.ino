@@ -1,9 +1,9 @@
 #define Pot_PIN A0 
 #define ANALOG_X_PIN A2 
-#define ANALOG_Y_PIN A3 
 
 struct analog { 
-    float x, y;
+    // float x, y;
+    float x;
     int pot;
 }; 
 
@@ -20,13 +20,9 @@ void loop()
     analog control; 
 
     control.x = readAnalogAxisLevel(ANALOG_X_PIN)  * - 1.0f; // Flip x axis
-    control.y = readAnalogAxisLevel(ANALOG_Y_PIN); 
 
     Serial.print("X:"); 
     Serial.println(control.x); 
-
-    Serial.print("Y:"); 
-    Serial.println(control.y); 
 
     control.pot = map(analogRead(Pot_PIN), 0, 1023, 0, 255); //Map value 0-1023 to 0-255 (PWM)
     Serial.print("P:"); 

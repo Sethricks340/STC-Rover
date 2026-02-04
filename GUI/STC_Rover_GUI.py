@@ -40,24 +40,22 @@ except Exception as e:
     # sys.exit(1) // TODO: Uncomment this
 
 class SerialThread(QThread):
-    data_received = pyqtSignal(float, float, int)
+    data_received = pyqtSignal(float, int)
 
     def run(self):
         ser = serial.Serial("COM4", 115200, timeout=1)
 
-        x = y = pot = None
+        x = pot = None
         while True:
             line = ser.readline().decode(errors="ignore").strip()
             if line.startswith("X:"):
                 x = float(line[2:])
-            elif line.startswith("Y:"):
-                y = float(line[2:])
             elif line.startswith("P:"):
                 pot = int(line[2:])
 
-            if x is not None and y is not None and pot is not None:
-                self.data_received.emit(x, y, pot)
-                x = y = pot = None
+            if x is not None and pot is not None:
+                self.data_received.emit(x, pot)
+                x = pot = None
 
 # Subclass QMainWindow
 class MainWindow(QMainWindow):
@@ -81,8 +79,8 @@ class MainWindow(QMainWindow):
         container.setLayout(layout)
         self.setCentralWidget(container)
     
-    def motor_joystick_moved(self, x, y, pot):
-        print(f"Motor Joystick X={x:.2f}, Y={y:.2f}, POT={pot}")
+    def motor_joystick_moved(self, x, pot):
+        print(f"Motor Joystick X={x:.2f}, POT={pot}")
 
         # Note: (Wires to the RIGHT):
             # Middle: about -0.05 to 0.05
