@@ -37,7 +37,7 @@ try:
 except Exception as e:
     print("WebSocket connection failed:", e)
     ws_connected = False
-    # sys.exit(1) // TODO: Uncomment this
+    sys.exit(1) 
 
 class SerialThread(QThread):
     data_received = pyqtSignal(float, int)
@@ -66,11 +66,11 @@ class MainWindow(QMainWindow):
         self.setWindowTitle("STC Rover")
 
         self.serial_thread = SerialThread()
-        self.serial_thread.data_received.connect(self.motor_joystick_moved)
+        self.serial_thread.data_received.connect(self.control_data)
         self.serial_thread.start()
 
         layout = QVBoxLayout()
-        self.motor_opcode = 0000
+        self.motor_opcode = 0  
 
         # Layout
         layout = QHBoxLayout()
@@ -78,27 +78,15 @@ class MainWindow(QMainWindow):
         container = QWidget()
         container.setLayout(layout)
         self.setCentralWidget(container)
+
+    def send(self, motor, pot):
+        binary_msg = bytes([self.motor_opcode, motor, 1, pot, 0])
+        ws.send(binary_msg, opcode=websocket.ABNF.OPCODE_BINARY)
     
-    def motor_joystick_moved(self, x, pot):
+    def control_data(self, x, pot):
         print(f"Motor Joystick X={x:.2f}, POT={pot}")
-
-        # Note: (Wires to the RIGHT):
-            # Middle: about -0.05 to 0.05
-            # Up: Y to +1
-            # Down: Y to -1
-            # Right: X to -1
-            # Left: X to +1
-
-        # TODO: uncomment this to send message over WIFI
-        # def send(motor, value):
-        #     # speed = int(abs(value) * 255)
-        #     # power = 0 if value == 0 else 1
-        #     # direction = 1 if value < 0 else 0
-        #     #     # binary_msg = bytes([opcode, motor#, power, speed, direction])
-        #     # msg = bytes([self.motor_opcode, motor, power, speed if power else 0, direction if power else 0])
-        #     # ws.send(msg, opcode=websocket.ABNF.OPCODE_BINARY)
-        # send(0, x)
-        # send(1, y)
+        self.send(0, pot)
+        self.send(1, pot)
 
 app = QApplication(sys.argv)
 window = MainWindow()
