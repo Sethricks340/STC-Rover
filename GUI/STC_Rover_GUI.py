@@ -49,6 +49,7 @@ class SerialThread(QThread):
 
     def run(self):
         handeld = None
+        x = pot = reverse = None
         while True:
             if handeld is None:
                 try:
@@ -72,6 +73,7 @@ class SerialThread(QThread):
 
                 if x is not None and pot is not None and reverse is not None:
                     self.data_received.emit(x, pot, reverse)
+                    print(f"X: {x}, Pot: {pot}, Reverse: {reverse}")
                     x = pot = reverse = None
 
             except (serial.SerialException, OSError) as e:
