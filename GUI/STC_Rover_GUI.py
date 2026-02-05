@@ -104,11 +104,57 @@ class MainWindow(QMainWindow):
         self.motor_opcode = 0  
 
         #layout
-        layout = QVBoxLayout()
+        layout = QHBoxLayout()
+
+        infos_layout = QVBoxLayout()
+
+        self.camera_feed_label = QLabel("Camera Feed Placeholder")
+        self.camera_feed_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.camera_feed_label.setMinimumSize(320, 240)
+        self.camera_feed_label.setStyleSheet("""
+            QLabel {
+                border: 2px solid black;
+                background-color: #000000;
+                font-size: 20px;
+                color: #FFFFFF;
+            }
+        """)
+        layout.addWidget(self.camera_feed_label, stretch=3)
 
         self.handheld_status_label = QLabel("Handheld: Not Connected")
-        layout.addWidget(self.handheld_status_label)
+        self.handheld_status_label.setStyleSheet("""
+            QLabel {
+                font-size: 20px;
+            }
+        """)
+        infos_layout.addWidget(self.handheld_status_label)
 
+        self.car_connection_status_label = QLabel("Car Connected: Placeholder")
+        self.car_connection_status_label.setStyleSheet("""
+            QLabel {
+                font-size: 20px;
+            }
+        """)
+        infos_layout.addWidget(self.car_connection_status_label)
+        
+        self.GPS_location_label = QLabel("GPS: Placeholder")
+        self.GPS_location_label.setStyleSheet("""
+            QLabel {
+                font-size: 20px;
+            }
+        """)
+        infos_layout.addWidget(self.GPS_location_label)
+
+        self.battery_location_label = QLabel("Battery: Placeholder")
+        self.battery_location_label.setStyleSheet("""
+            QLabel {
+                font-size: 20px;
+            }
+        """)
+        infos_layout.addWidget(self.battery_location_label)
+
+        layout.addLayout(infos_layout, stretch=1)
+        
         container = QWidget()
         container.setLayout(layout)
         self.setCentralWidget(container)
