@@ -1,5 +1,5 @@
-// TODO: add reverse button
 
+#define Switch_Pin 2
 #define Pot_PIN A0 
 #define ANALOG_X_PIN A2 
 
@@ -7,6 +7,7 @@ struct analog {
     // float x, y;
     float x;
     int pot;
+    int reverse;
 }; 
 
 // forward declarations
@@ -15,6 +16,7 @@ float readAnalogAxisLevel(int pin);
 void setup() 
 { 
   Serial.begin(115200); 
+  pinMode(Switch_Pin, INPUT_PULLUP);
 } 
 
 void loop() 
@@ -30,8 +32,9 @@ void loop()
     Serial.print("P:"); 
     Serial.println(control.pot);  
 
+    control.reverse = digitalRead(Switch_Pin);
     Serial.print("R:"); 
-    Serial.println(0);  
+    Serial.println(control.reverse);  
     delay(50);
 } 
 

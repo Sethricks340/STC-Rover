@@ -1,0 +1,14 @@
+{
+	"folders": [
+		{
+			"path": "."
+		},
+		{
+			"path": "../GUI"
+		},
+		{
+			"path": "../GUI/handheld"
+		}
+	],
+	"settings": {}
+}

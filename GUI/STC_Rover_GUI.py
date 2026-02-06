@@ -10,9 +10,6 @@
 # If doesn't actually connect (client rejected), still getting the GUI
 # If lose connection with ESP, don't know. GUI keeps going with no alert
 # Still doesn't connect from different WIFIs :(
-# Send Handheld joystick signals to motors
-        # |-> Test directions
-# Make button or switch for reverse
 
 import serial
 import sys
@@ -165,9 +162,9 @@ class MainWindow(QMainWindow):
         else:
             self.handheld_status_label.setText("Handheld: Disconnected")
 
-    def send(self, motor, pot):
+    def send(self, motor, pot, reverse):
         # binary_msg = bytes([opcode, motor#, power, speed, direction])
-        binary_msg = bytes([self.motor_opcode, motor, 1, pot, 0])
+        binary_msg = bytes([self.motor_opcode, motor, 1, pot, reverse])
         ws.send(binary_msg, opcode=websocket.ABNF.OPCODE_BINARY)
     
     def control_data(self, turn, pot, reverse): # TODO: reverse unused
@@ -175,17 +172,17 @@ class MainWindow(QMainWindow):
         turn_value = max(0, int(pot * (1 - min(1, abs(turn))))) # Clamp to never larger than 1, never below 0
 
         if (-0.1 <= turn <= 0.1):  # Deadspot = 0
-            self.send(RIGHT_MOTORS, pot)  # we'll say motor 0 is RIGHT side, subject to future change
-            self.send(LEFT_MOTORS, pot)
+            self.send(RIGHT_MOTORS, pot, reverse)  # we'll say motor 0 is RIGHT side, subject to future change
+            self.send(LEFT_MOTORS, pot, reverse)
         elif (turn > 0.1): 
-            self.send(LEFT_MOTORS, pot) # Send full to left motors
-            self.send(RIGHT_MOTORS, turn_value) # Turning right, slow down right motors
+            self.send(LEFT_MOTORS, pot, reverse) # Send full to left motors
+            self.send(RIGHT_MOTORS, turn_value, reverse) # Turning right, slow down right motors
         elif (turn < -0.1): 
-            self.send(RIGHT_MOTORS, pot) # Send full to left motors
-            self.send(LEFT_MOTORS, turn_value) # Turning left, slow down left motors
+            self.send(RIGHT_MOTORS, pot, reverse) # Send full to left motors
+            self.send(LEFT_MOTORS, turn_value, reverse) # Turning left, slow down left motors
         else:
-            self.send(RIGHT_MOTORS, pot) 
-            self.send(LEFT_MOTORS, pot)
+            self.send(RIGHT_MOTORS, pot, reverse) 
+            self.send(LEFT_MOTORS, pot, reverse)
 
 app = QApplication(sys.argv)
 window = MainWindow()
