@@ -33,7 +33,8 @@ LEFT_MOTORS = 1
 
 ws = websocket.WebSocket()
 try:
-    ws.connect("ws://stc_esp.local:81/ws")
+    ws.connect("ws://10.15.27.151:81/ws")
+    print("WebSocket connection success!")
     ws_connected = True
 except Exception as e:
     print("WebSocket connection failed:", e)
@@ -50,7 +51,7 @@ class SerialThread(QThread):
         while True:
             if handeld is None:
                 try:
-                    handeld = serial.Serial("COM4", 115200, timeout=1)
+                    handeld = serial.Serial("COM5", 115200, timeout=1)
                     print("Handheld connected")
                     self.connection_changed.emit(True)
                 except serial.SerialException:
