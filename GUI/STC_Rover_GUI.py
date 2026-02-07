@@ -100,6 +100,8 @@ class MainWindow(QMainWindow):
         self.serial_thread.start()
 
         self.motor_opcode = 0  
+        self.reverse = False # Initialize reverse bool to 0 (not reversed)
+        self.ignore_reverse = False # For testing without handheld, ignore reverse input and just use pot for forward/backward
 
         #layout
         layout = QHBoxLayout()
@@ -168,8 +170,7 @@ class MainWindow(QMainWindow):
         binary_msg = bytes([self.motor_opcode, motor, 1, pot, reverse])
         ws.send(binary_msg, opcode=websocket.ABNF.OPCODE_BINARY)
     
-    def control_data(self, turn, pot, reverse): # TODO: reverse unused
-        # print(f"Motor Joystick X={turn:.2f}, POT={pot}")
+    def control_data(self, turn, pot, reverse):
         turn_value = max(0, int(pot * (1 - min(1, abs(turn))))) # Clamp to never larger than 1, never below 0
 
         if (-0.1 <= turn <= 0.1):  # Deadspot = 0
