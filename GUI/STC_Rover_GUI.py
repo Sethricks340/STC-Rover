@@ -173,25 +173,32 @@ class MainWindow(QMainWindow):
     
     def control_data(self, turn, pot, reverse):
 
+        if (not ws_connected): return
         if (self.ignore_serial): return
         print(f"Control data received")
 
         if (self.direction != reverse):
+            self.ignore_serial = True
             print(f"changed direction from {self.direction} to {reverse} at speed {pot}")
             
-            # Pseudocode
-                # Need to go from current_pot to 0
-                    # Switch direction
-                        # go from 0 to current_pot
-
+            # Need to go from current_pot to 0
+            current_pot = pot
+            for speed in range(current_pot, -1, -1):
+                self.send(LEFT_MOTORS, speed, self.direction)
+                self.send(RIGHT_MOTORS, speed, self.direction) 
+                time.sleep(0.1)
+            # Switch direction
             self.direction = reverse
-            self.ignore_serial = True
-            time.sleep(3) # replace with soft reverse logic
+            # go from 0 to current_pot
+            for speed in range(0, current_pot + 1, 1):
+                self.send(LEFT_MOTORS, pot, self.direction)
+                self.send(RIGHT_MOTORS, pot, self.direction) 
+                time.sleep(0.1)
+
             self.ignore_serial = False
 
         turn_value = max(0, int(pot * (1 - min(1, abs(turn))))) # Clamp to never larger than 1, never below 0
 
-        if (not ws_connected): return
         if (-0.1 <= turn <= 0.1):  # Deadspot = 0
             self.send(RIGHT_MOTORS, pot, reverse)  # we'll say motor 0 is RIGHT side, subject to future change
             self.send(LEFT_MOTORS, pot, reverse)
