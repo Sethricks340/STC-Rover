@@ -8,6 +8,7 @@
     # Battery life
 # Known Issues:
 # GUI doesn't crash when ESP disconnects, but it is slow to realize it (to changing the connected label)
+# Still doesn't connect from different WIFIs :(
 
 import time
 import serial
