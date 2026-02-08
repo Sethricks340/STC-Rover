@@ -134,7 +134,7 @@ class MainWindow(QMainWindow):
 
         self.motor_opcode = 0  
         self.direction = 0 # Initialize reverse bool to 0 (not reversed)
-        self.ignore_serial = False # For testing without handheld, ignore reverse input and just use pot for forward/backward
+        self.ignore_serial = False 
 
         #layout
         layout = QHBoxLayout()
@@ -212,11 +212,6 @@ class MainWindow(QMainWindow):
         else:
             self.car_connection_status_label.setText("Car Connected: Disconnected")
 
-    # def send(self, motor, pot, reverse):
-    #     # binary_msg = bytes([opcode, motor#, power, speed, direction])
-    #     binary_msg = bytes([self.motor_opcode, motor, 1, pot, reverse])
-    #     ws.send(binary_msg, opcode=websocket.ABNF.OPCODE_BINARY)
-
     def send(self, motor, pot, reverse):
         global ws_connected, ws
         binary_msg = bytes([self.motor_opcode, motor, 1, pot, reverse])
@@ -229,31 +224,12 @@ class MainWindow(QMainWindow):
             print(f"WebSocket send failed: {e}")
             ws_connected = False
             self.start_reconnect()  # non-blocking reconnect
-        def reconnect_ws(self):
-            global ws_connected, ws
-            ws_connected = False
-            self.update_car_status(False)
-            while not ws_connected:
-                try:
-                    ws.close()  # just in case
-                except:
-                    pass
-                try:
-                    ws = websocket.WebSocket()
-                    ws.connect(ip_string)
-                    ws_connected = True
-                    print("Reconnected to WebSocket!")
-                except Exception as e:
-                    print(f"Reconnect failed: {e}, retrying in 1 second...")
-                    time.sleep(1)
 
     def control_data(self, turn, pot, reverse):
         if not ws_connected:
             return  # skip everything if ESP is disconnected
         if self.ignore_serial:
             return  # skip new direction flips while handling current one
-
-        # print(f"Control data received")
 
         # Only allow one flip at a time
         if self.direction != reverse:
