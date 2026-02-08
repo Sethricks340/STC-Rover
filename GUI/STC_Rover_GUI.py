@@ -11,6 +11,7 @@
 # If lose connection with ESP, don't know. GUI keeps going with no alert
 # Still doesn't connect from different WIFIs :(
 
+import time
 import serial
 import sys
 import websocket
@@ -51,7 +52,7 @@ class SerialThread(QThread):
         while True:
             if handeld is None:
                 try:
-                    handeld = serial.Serial("COM5", 115200, timeout=1)
+                    handeld = serial.Serial("COM4", 115200, timeout=1) # TODO: Search for COM instead of hardcoding 
                     print("Handheld connected")
                     self.connection_changed.emit(True)
                 except serial.SerialException:
@@ -71,7 +72,7 @@ class SerialThread(QThread):
 
                 if x is not None and pot is not None and reverse is not None:
                     self.data_received.emit(x, pot, reverse)
-                    print(f"X: {x}, Pot: {pot}, Reverse: {reverse}")
+                    # print(f"X: {x}, Pot: {pot}, Reverse: {reverse}")
                     x = pot = reverse = None
 
             except (serial.SerialException, OSError) as e:
@@ -100,8 +101,8 @@ class MainWindow(QMainWindow):
         self.serial_thread.start()
 
         self.motor_opcode = 0  
-        self.reverse = False # Initialize reverse bool to 0 (not reversed)
-        self.ignore_reverse = False # For testing without handheld, ignore reverse input and just use pot for forward/backward
+        self.direction = 0 # Initialize reverse bool to 0 (not reversed)
+        self.ignore_serial = False # For testing without handheld, ignore reverse input and just use pot for forward/backward
 
         #layout
         layout = QHBoxLayout()
@@ -171,8 +172,26 @@ class MainWindow(QMainWindow):
         ws.send(binary_msg, opcode=websocket.ABNF.OPCODE_BINARY)
     
     def control_data(self, turn, pot, reverse):
+
+        if (self.ignore_serial): return
+        print(f"Control data received")
+
+        if (self.direction != reverse):
+            print(f"changed direction from {self.direction} to {reverse} at speed {pot}")
+            
+            # Pseudocode
+                # Need to go from current_pot to 0
+                    # Switch direction
+                        # go from 0 to current_pot
+
+            self.direction = reverse
+            self.ignore_serial = True
+            time.sleep(3) # replace with soft reverse logic
+            self.ignore_serial = False
+
         turn_value = max(0, int(pot * (1 - min(1, abs(turn))))) # Clamp to never larger than 1, never below 0
 
+        if (not ws_connected): return
         if (-0.1 <= turn <= 0.1):  # Deadspot = 0
             self.send(RIGHT_MOTORS, pot, reverse)  # we'll say motor 0 is RIGHT side, subject to future change
             self.send(LEFT_MOTORS, pot, reverse)
