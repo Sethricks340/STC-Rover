@@ -112,11 +112,11 @@ void onWebSocketEvent(
             byte pwm          = data[3];
             byte direction    = data[4];
 
-            Serial.print("Opcode: "); Serial.println(opcode);
-            Serial.print("Motor: "); Serial.println(motor_number);
-            Serial.print("Power: "); Serial.println(power);
-            Serial.print("PWM: "); Serial.println(pwm);
-            Serial.print("Direction: "); Serial.println(direction); Serial.println("\n");
+            Serial.print("Opcode: "); Serial.print(opcode);
+            Serial.print(" Motor: "); Serial.print(motor_number);
+            Serial.print(" Power: "); Serial.print(power);
+            Serial.print(" PWM: "); Serial.print(pwm);
+            Serial.print(" Direction: "); Serial.print(direction); Serial.print("\n");
 
             if(!opcode){ // Motor opcode = 0000
                 if (power) motor_on(motor_number, pwm, direction);

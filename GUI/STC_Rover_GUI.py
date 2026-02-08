@@ -34,7 +34,8 @@ LEFT_MOTORS = 1
 
 ws = websocket.WebSocket()
 try:
-    ws.connect("ws://10.15.27.151:81/ws")
+    # ws.connect("ws://10.15.27.151:81/ws")
+    ws.connect("ws://stc_esp.local:81/ws")
     print("WebSocket connection success!")
     ws_connected = True
 except Exception as e:
@@ -177,23 +178,24 @@ class MainWindow(QMainWindow):
         if (self.ignore_serial): return
         print(f"Control data received")
 
+        # TODO: If flip switch multiple times fast, motors try to do them all, then esp crashes
         if (self.direction != reverse):
             self.ignore_serial = True
             print(f"changed direction from {self.direction} to {reverse} at speed {pot}")
             
             # Need to go from current_pot to 0
             current_pot = pot
-            for speed in range(current_pot, -1, -1):
+            for speed in range(current_pot, 29, -5):
                 self.send(LEFT_MOTORS, speed, self.direction)
                 self.send(RIGHT_MOTORS, speed, self.direction) 
-                time.sleep(0.1)
+                time.sleep(0.05)
             # Switch direction
             self.direction = reverse
             # go from 0 to current_pot
-            for speed in range(0, current_pot + 1, 1):
-                self.send(LEFT_MOTORS, pot, self.direction)
-                self.send(RIGHT_MOTORS, pot, self.direction) 
-                time.sleep(0.1)
+            for speed in range(30, current_pot + 1, 5):
+                self.send(LEFT_MOTORS, speed, self.direction)
+                self.send(RIGHT_MOTORS, speed, self.direction) 
+                time.sleep(0.05)
 
             self.ignore_serial = False
 
