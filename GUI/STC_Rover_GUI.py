@@ -9,6 +9,7 @@
 # Known Issues:
 # GUI doesn't crash when ESP disconnects, but it is slow to realize it (to changing the connected label)
 # Still doesn't connect from different WIFIs :(
+# Joystick is really sensitive?
 
 import time
 import serial
