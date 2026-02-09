@@ -98,7 +98,7 @@ class SerialThread(QThread):
                 elif line.startswith("R:"):
                     reverse = int(line[2:])
 
-                print(f"x{x}, y{y}, reverse{reverse}")
+                # print(f"x{x}, y{y}, reverse{reverse}")
 
                 if x is not None and y is not None and reverse is not None:
                     self.data_received.emit(x, y, reverse)
@@ -135,8 +135,8 @@ class MainWindow(QMainWindow):
         if not ws_connected: self.start_reconnect()
 
         self.motor_opcode = 0  
-        self.direction = 0 # Initialize reverse bool to 0 (not reversed)
-        self.ignore_serial = False 
+        self.smoothed_y = 0  # keeps track of last smoothed Y value
+        self.smoothed_turn = 0
 
         #layout
         layout = QHBoxLayout()
@@ -230,45 +230,28 @@ class MainWindow(QMainWindow):
     def control_data(self, turn, y, reverse):
         if not ws_connected:
             return  # skip everything if ESP is disconnected
-        # if self.ignore_serial:
-        #     return  # skip new direction flips while handling current one
 
-        # Only allow one flip at a time
-        # if self.direction != reverse:
-        #     self.ignore_serial = True
-        #     print(f"changed direction from {self.direction} to {reverse} at speed {y}")
+        alpha = 0.1  # smoothing factor
+        self.smoothed_y += alpha * (y - self.smoothed_y)
+        self.smoothed_turn += alpha * (turn - self.smoothed_turn)
 
-        #     # current_y = y
-        #     current_y = int(max(0, min(255, abs(y) * 255)))
-        #     # ramp down
-        #     for speed in range(current_y, 29, -5):
-        #         self.send(LEFT_MOTORS, speed, self.direction)
-        #         self.send(RIGHT_MOTORS, speed, self.direction)
-        #         time.sleep(0.05)
+        # convert smoothed values to PWM
+        y_pwm = int(max(0, min(255, abs(self.smoothed_y) * 255)))
+        turn_value = int(y_pwm * (1 - min(1, abs(self.smoothed_turn))))
 
-        #     self.direction = reverse
-        #     # ramp up
-        #     for speed in range(30, current_y + 1, 5):
-        #         self.send(LEFT_MOTORS, speed, self.direction)
-        #         self.send(RIGHT_MOTORS, speed, self.direction)
-        #         time.sleep(0.05)
-
-        #     self.ignore_serial = False
-
-        # normal turning
-        y_pwm = int(max(0, min(255, abs(y) * 255)))
-        turn_value = int(y_pwm * (1 - min(1, abs(turn))))
+        # soft reverse logic
+        current_direction = 0 if self.smoothed_y >= 0 else 1
 
         try:
-            if -0.1 <= turn <= 0.1:
-                self.send(RIGHT_MOTORS, y_pwm, reverse)
-                self.send(LEFT_MOTORS, y_pwm, reverse)
-            elif turn > 0.1:
-                self.send(LEFT_MOTORS, y_pwm, reverse)
-                self.send(RIGHT_MOTORS, turn_value, reverse)
-            elif turn < -0.1:
-                self.send(RIGHT_MOTORS, y_pwm, reverse)
-                self.send(LEFT_MOTORS, turn_value, reverse)
+            if -0.1 <= self.smoothed_turn <= 0.1:
+                self.send(RIGHT_MOTORS, y_pwm, current_direction)
+                self.send(LEFT_MOTORS, y_pwm, current_direction)
+            elif self.smoothed_turn > 0.1:
+                self.send(LEFT_MOTORS, y_pwm, current_direction)
+                self.send(RIGHT_MOTORS, turn_value, current_direction)
+            elif self.smoothed_turn < -0.1:
+                self.send(RIGHT_MOTORS, y_pwm, current_direction)
+                self.send(LEFT_MOTORS, turn_value, current_direction)
         except (websocket.WebSocketConnectionClosedException, ConnectionResetError):
             print("ESP disconnected during normal send, skipping frame")
 
