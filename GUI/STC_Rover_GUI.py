@@ -71,16 +71,16 @@ class ReconnectThread(QThread):
                 time.sleep(1)
 
 class SerialThread(QThread):
-    data_received = pyqtSignal(float, int, int)
+    data_received = pyqtSignal(float, float, int)
     connection_changed = pyqtSignal(bool)
 
     def run(self):
         handeld = None
-        x = pot = reverse = None
+        x = y = reverse = None
         while True:
             if handeld is None:
                 try:
-                    handeld = serial.Serial("COM4", 115200, timeout=1) # TODO: Search for COM instead of hardcoding 
+                    handeld = serial.Serial("COM5", 115200, timeout=1) # TODO: Search for COM instead of hardcoding 
                     print("Handheld connected")
                     self.connection_changed.emit(True)
                 except serial.SerialException:
@@ -93,15 +93,17 @@ class SerialThread(QThread):
                 line = handeld.readline().decode(errors="ignore").strip()
                 if line.startswith("X:"):
                     x = float(line[2:])
-                elif line.startswith("P:"):
-                    pot = int(line[2:])
+                elif line.startswith("Y:"):
+                    y = float(line[2:])
                 elif line.startswith("R:"):
                     reverse = int(line[2:])
 
-                if x is not None and pot is not None and reverse is not None:
-                    self.data_received.emit(x, pot, reverse)
-                    # print(f"X: {x}, Pot: {pot}, Reverse: {reverse}")
-                    x = pot = reverse = None
+                print(f"x{x}, y{y}, reverse{reverse}")
+
+                if x is not None and y is not None and reverse is not None:
+                    self.data_received.emit(x, y, reverse)
+                    # print(f"X: {x}, y: {y}, Reverse: {reverse}")
+                    x = y = reverse = None
 
             except (serial.SerialException, OSError) as e:
                 print(f"Handheld disconnected: {e}")
@@ -212,9 +214,9 @@ class MainWindow(QMainWindow):
         else:
             self.car_connection_status_label.setText("Car Connected: Disconnected")
 
-    def send(self, motor, pot, reverse):
+    def send(self, motor, y, reverse):
         global ws_connected, ws
-        binary_msg = bytes([self.motor_opcode, motor, 1, pot, reverse])
+        binary_msg = bytes([self.motor_opcode, motor, 1, y, reverse])
         if not ws_connected:
             return
 
@@ -225,45 +227,47 @@ class MainWindow(QMainWindow):
             ws_connected = False
             self.start_reconnect()  # non-blocking reconnect
 
-    def control_data(self, turn, pot, reverse):
+    def control_data(self, turn, y, reverse):
         if not ws_connected:
             return  # skip everything if ESP is disconnected
-        if self.ignore_serial:
-            return  # skip new direction flips while handling current one
+        # if self.ignore_serial:
+        #     return  # skip new direction flips while handling current one
 
         # Only allow one flip at a time
-        if self.direction != reverse:
-            self.ignore_serial = True
-            print(f"changed direction from {self.direction} to {reverse} at speed {pot}")
+        # if self.direction != reverse:
+        #     self.ignore_serial = True
+        #     print(f"changed direction from {self.direction} to {reverse} at speed {y}")
 
-            current_pot = pot
-            # ramp down
-            for speed in range(current_pot, 29, -5):
-                self.send(LEFT_MOTORS, speed, self.direction)
-                self.send(RIGHT_MOTORS, speed, self.direction)
-                time.sleep(0.05)
+        #     # current_y = y
+        #     current_y = int(max(0, min(255, abs(y) * 255)))
+        #     # ramp down
+        #     for speed in range(current_y, 29, -5):
+        #         self.send(LEFT_MOTORS, speed, self.direction)
+        #         self.send(RIGHT_MOTORS, speed, self.direction)
+        #         time.sleep(0.05)
 
-            self.direction = reverse
-            # ramp up
-            for speed in range(30, current_pot + 1, 5):
-                self.send(LEFT_MOTORS, speed, self.direction)
-                self.send(RIGHT_MOTORS, speed, self.direction)
-                time.sleep(0.05)
+        #     self.direction = reverse
+        #     # ramp up
+        #     for speed in range(30, current_y + 1, 5):
+        #         self.send(LEFT_MOTORS, speed, self.direction)
+        #         self.send(RIGHT_MOTORS, speed, self.direction)
+        #         time.sleep(0.05)
 
-            self.ignore_serial = False
+        #     self.ignore_serial = False
 
         # normal turning
-        turn_value = max(0, int(pot * (1 - min(1, abs(turn)))))
+        y_pwm = int(max(0, min(255, abs(y) * 255)))
+        turn_value = int(y_pwm * (1 - min(1, abs(turn))))
 
         try:
             if -0.1 <= turn <= 0.1:
-                self.send(RIGHT_MOTORS, pot, reverse)
-                self.send(LEFT_MOTORS, pot, reverse)
+                self.send(RIGHT_MOTORS, y_pwm, reverse)
+                self.send(LEFT_MOTORS, y_pwm, reverse)
             elif turn > 0.1:
-                self.send(LEFT_MOTORS, pot, reverse)
+                self.send(LEFT_MOTORS, y_pwm, reverse)
                 self.send(RIGHT_MOTORS, turn_value, reverse)
             elif turn < -0.1:
-                self.send(RIGHT_MOTORS, pot, reverse)
+                self.send(RIGHT_MOTORS, y_pwm, reverse)
                 self.send(LEFT_MOTORS, turn_value, reverse)
         except (websocket.WebSocketConnectionClosedException, ConnectionResetError):
             print("ESP disconnected during normal send, skipping frame")
