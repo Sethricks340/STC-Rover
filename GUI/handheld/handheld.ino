@@ -24,8 +24,8 @@ void setup()
 void loop() 
 { 
 
-    Serial.print(analogRead(ANALOG_X_PIN)); // Debug
-    Serial.print(analogRead(ANALOG_Y_PIN)); // Debug
+    // Serial.println(analogRead(ANALOG_X_PIN)); // Debug
+    // Serial.println(analogRead(ANALOG_Y_PIN)); // Debug
 
     analog control; 
 
