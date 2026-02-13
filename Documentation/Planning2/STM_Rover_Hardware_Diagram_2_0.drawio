@@ -1,0 +1,76 @@
+<mxfile host="app.diagrams.net" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36" version="29.3.8">
+  <diagram name="Page-1" id="sHc9xfIWNT4cOC6KjUcl">
+    <mxGraphModel dx="872" dy="439" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="RZJfc4jIROsHqnFpcvb8-1" parent="1" style="rounded=0;whiteSpace=wrap;html=1;" value="ESP Microcontroller" vertex="1">
+          <mxGeometry height="60" width="120" x="370" y="270" as="geometry" />
+        </mxCell>
+        <mxCell id="RZJfc4jIROsHqnFpcvb8-2" parent="1" style="rounded=0;whiteSpace=wrap;html=1;" value="Battery" vertex="1">
+          <mxGeometry height="60" width="120" x="370" y="50" as="geometry" />
+        </mxCell>
+        <mxCell id="RZJfc4jIROsHqnFpcvb8-3" parent="1" style="rounded=0;whiteSpace=wrap;html=1;" value="Motor Controller" vertex="1">
+          <mxGeometry height="60" width="120" x="370" y="150" as="geometry" />
+        </mxCell>
+        <mxCell id="RZJfc4jIROsHqnFpcvb8-4" parent="1" style="rounded=0;whiteSpace=wrap;html=1;" value="Motors" vertex="1">
+          <mxGeometry height="60" width="120" x="580" y="50" as="geometry" />
+        </mxCell>
+        <mxCell id="RZJfc4jIROsHqnFpcvb8-5" edge="1" parent="1" source="RZJfc4jIROsHqnFpcvb8-2" style="endArrow=classic;html=1;rounded=0;exitX=0.5;exitY=1;exitDx=0;exitDy=0;" value="">
+          <mxGeometry height="50" relative="1" width="50" as="geometry">
+            <mxPoint x="440" y="120" as="sourcePoint" />
+            <mxPoint x="430" y="150" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="RZJfc4jIROsHqnFpcvb8-7" edge="1" parent="1" source="RZJfc4jIROsHqnFpcvb8-3" style="endArrow=classic;html=1;rounded=0;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" target="RZJfc4jIROsHqnFpcvb8-4" value="">
+          <mxGeometry height="50" relative="1" width="50" as="geometry">
+            <mxPoint x="520" y="80" as="sourcePoint" />
+            <mxPoint x="450" y="240" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="RZJfc4jIROsHqnFpcvb8-8" parent="1" style="rounded=0;whiteSpace=wrap;html=1;" value="Camera" vertex="1">
+          <mxGeometry height="60" width="120" x="150" y="270" as="geometry" />
+        </mxCell>
+        <mxCell id="RZJfc4jIROsHqnFpcvb8-9" edge="1" parent="1" source="RZJfc4jIROsHqnFpcvb8-8" style="endArrow=classic;startArrow=classic;html=1;rounded=0;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" target="RZJfc4jIROsHqnFpcvb8-1" value="">
+          <mxGeometry height="50" relative="1" width="50" as="geometry">
+            <mxPoint x="400" y="290" as="sourcePoint" />
+            <mxPoint x="450" y="240" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="RZJfc4jIROsHqnFpcvb8-10" parent="1" style="rounded=0;whiteSpace=wrap;html=1;" value="Camera Gimbal" vertex="1">
+          <mxGeometry height="60" width="120" x="150" y="170" as="geometry" />
+        </mxCell>
+        <mxCell id="RZJfc4jIROsHqnFpcvb8-14" parent="1" style="rounded=0;whiteSpace=wrap;html=1;" value="Laptop/Controller" vertex="1">
+          <mxGeometry height="60" width="120" x="580" y="270" as="geometry" />
+        </mxCell>
+        <mxCell id="RZJfc4jIROsHqnFpcvb8-15" parent="1" style="rounded=0;whiteSpace=wrap;html=1;" value="Laptop GUI/Controls" vertex="1">
+          <mxGeometry height="60" width="120" x="580" y="150" as="geometry" />
+        </mxCell>
+        <mxCell id="RZJfc4jIROsHqnFpcvb8-17" edge="1" parent="1" source="RZJfc4jIROsHqnFpcvb8-15" style="endArrow=classic;startArrow=classic;html=1;rounded=0;exitX=0.5;exitY=1;exitDx=0;exitDy=0;" value="">
+          <mxGeometry height="50" relative="1" width="50" as="geometry">
+            <mxPoint x="630" y="260" as="sourcePoint" />
+            <mxPoint x="640" y="270" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="RZJfc4jIROsHqnFpcvb8-19" edge="1" parent="1" source="RZJfc4jIROsHqnFpcvb8-1" style="shape=flexArrow;endArrow=classic;startArrow=classic;html=1;rounded=0;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" target="RZJfc4jIROsHqnFpcvb8-14" value="">
+          <mxGeometry height="100" relative="1" width="100" as="geometry">
+            <mxPoint x="600" y="280" as="sourcePoint" />
+            <mxPoint x="700" y="180" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="Dkg0krluPrio9VJPppcB-3" edge="1" parent="1" source="RZJfc4jIROsHqnFpcvb8-1" style="endArrow=classic;startArrow=classic;html=1;rounded=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;exitX=0.5;exitY=0;exitDx=0;exitDy=0;" target="RZJfc4jIROsHqnFpcvb8-3" value="">
+          <mxGeometry height="50" relative="1" width="50" as="geometry">
+            <mxPoint x="400" y="260" as="sourcePoint" />
+            <mxPoint x="450" y="210" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="Dkg0krluPrio9VJPppcB-4" edge="1" parent="1" source="RZJfc4jIROsHqnFpcvb8-1" style="endArrow=classic;html=1;rounded=0;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" target="RZJfc4jIROsHqnFpcvb8-10" value="">
+          <mxGeometry height="50" relative="1" width="50" as="geometry">
+            <mxPoint x="400" y="260" as="sourcePoint" />
+            <mxPoint x="450" y="210" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
