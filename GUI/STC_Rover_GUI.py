@@ -33,11 +33,11 @@ RIGHT_MOTORS = 0
 LEFT_MOTORS = 1
 
 ws = websocket.WebSocket()
-ws.settimeout(1)  
+# ws.settimeout(1)  
 
 try:
-    ip_string = "ws://stc_esp.local:81/ws"
-    # ip_string = "ws://10.15.27.151:81/ws"
+    # ip_string = "ws://stc_esp.local:81/ws"
+    ip_string = "ws://10.15.30.132:81/ws"
     ws.connect(ip_string)
     print("WebSocket connection success!")
     ws_connected = True
@@ -81,7 +81,7 @@ class SerialThread(QThread):
         while True:
             if handeld is None:
                 try:
-                    handeld = serial.Serial("COM5", 115200, timeout=1) # TODO: Search for COM instead of hardcoding 
+                    handeld = serial.Serial("COM4", 115200, timeout=1) # TODO: Search for COM instead of hardcoding 
                     print("Handheld connected")
                     self.connection_changed.emit(True)
                 except serial.SerialException:
@@ -208,6 +208,8 @@ class MainWindow(QMainWindow):
             self.handheld_status_label.setText("Handheld: Connected")
         else:
             self.handheld_status_label.setText("Handheld: Disconnected")
+            self.send(RIGHT_MOTORS, 0, 0)
+            self.send(LEFT_MOTORS, 0, 0)
 
     def update_car_status(self, connected: bool):
         if connected:
@@ -237,7 +239,9 @@ class MainWindow(QMainWindow):
         self.smoothed_turn += alpha * (turn - self.smoothed_turn)
 
         # convert smoothed values to PWM
-        y_pwm = int(max(0, min(255, abs(self.smoothed_y) * 255)))
+        y_pwm = int(max(0, min(120, abs(self.smoothed_y) * 255)))
+        # y_pwm = int(max(0, min(255, abs(self.smoothed_y) * 255)))
+        print(y_pwm)
         turn_value = int(y_pwm * (1 - min(1, abs(self.smoothed_turn))))
 
         # soft reverse logic
