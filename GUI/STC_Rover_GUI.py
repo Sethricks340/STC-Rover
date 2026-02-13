@@ -208,8 +208,8 @@ class MainWindow(QMainWindow):
             self.handheld_status_label.setText("Handheld: Connected")
         else:
             self.handheld_status_label.setText("Handheld: Disconnected")
-            self.send(RIGHT_MOTORS, 0, 0)
-            self.send(LEFT_MOTORS, 0, 0)
+            self.send(RIGHT_MOTORS, 0, 0)   # Turn off motors if handheld disconnected
+            self.send(LEFT_MOTORS, 0, 0)    # Turn off motors if handheld disconnected
 
     def update_car_status(self, connected: bool):
         if connected:
@@ -239,7 +239,7 @@ class MainWindow(QMainWindow):
         self.smoothed_turn += alpha * (turn - self.smoothed_turn)
 
         # convert smoothed values to PWM
-        y_pwm = int(max(0, min(120, abs(self.smoothed_y) * 255)))
+        y_pwm = int(max(0, min(255, abs(self.smoothed_y) * 255)) / 2)
         # y_pwm = int(max(0, min(255, abs(self.smoothed_y) * 255)))
         print(y_pwm)
         turn_value = int(y_pwm * (1 - min(1, abs(self.smoothed_turn))))
