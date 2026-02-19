@@ -36,8 +36,8 @@ ws = websocket.WebSocket()
 # ws.settimeout(1)  
 
 try:
-    # ip_string = "ws://stc_esp.local:81/ws"
-    ip_string = "ws://10.15.30.132:81/ws"
+    ip_string = "ws://stc_esp.local:81/ws"
+    # ip_string = "ws://10.15.30.132:81/ws"
     ws.connect(ip_string)
     print("WebSocket connection success!")
     ws_connected = True
@@ -239,8 +239,8 @@ class MainWindow(QMainWindow):
         self.smoothed_turn += alpha * (turn - self.smoothed_turn)
 
         # convert smoothed values to PWM
-        y_pwm = int(max(0, min(255, abs(self.smoothed_y) * 255)) / 2)
-        # y_pwm = int(max(0, min(255, abs(self.smoothed_y) * 255)))
+        y_pwm = int(max(0, min(255, abs(self.smoothed_y) * 255)))
+        # y_pwm = int(max(0, min(255, abs(self.smoothed_y) * 255)) / 2)
         print(y_pwm)
         turn_value = int(y_pwm * (1 - min(1, abs(self.smoothed_turn))))
 
