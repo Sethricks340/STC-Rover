@@ -247,26 +247,21 @@ class MainWindow(QMainWindow):
         self.smoothed_y += alpha * (y - self.smoothed_y)
         self.smoothed_turn += alpha * (turn - self.smoothed_turn)
 
-        # convert smoothed values to PWM
-        y_pwm = int(max(0, min(255, abs(self.smoothed_y) * 255)))       # Max speeds
-        # y_pwm = int(max(0, min(255, abs(self.smoothed_y) * 255)) / 2) # Halfed speeds
-        # print(y_pwm)
-        turn_value = int(y_pwm * (1 - min(1, abs(self.smoothed_turn))))
-
         # soft reverse logic
         current_direction = 0 if self.smoothed_y >= 0 else 1
         right_direction = 1 - current_direction   # invert only right side, switched on car
 
         turn_strength = min(1.0, abs(self.smoothed_turn))
 
-        base = int(abs(self.smoothed_y) * 255)
-        boost = int(base * turn_strength)
+        # base = int(abs(self.smoothed_y) * 255)  # Max speeds
+        base = int(abs(self.smoothed_y) * 255 / 2)  # Halfed speeds (doesn't work as well)
+        boost = int(base * turn_strength) # outside wheel turning
 
-        if turn_strength > 0.7:cut = 0
-        else: cut   = int(base * (1 - turn_strength))
+        if turn_strength > 0.7: cut = 0
+        else: cut = int(base * (1 - turn_strength)) # inside wheel turning
 
         current_direction = 0 if self.smoothed_y >= 0 else 1
-        right_direction = 1 - current_direction
+        right_direction = 1 - current_direction # invert only right side, switched on car
 
         if self.smoothed_turn > 0.1:  # turn right
             self.send(LEFT_MOTORS,  min(255, base + boost), current_direction)
