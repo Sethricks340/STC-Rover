@@ -11,7 +11,7 @@
 #define I2S_BUFFER_SIZE 1024
 
 void setup() {
-  Serial.begin(115200);
+  Serial.begin(921600);
   Serial.println("INMP441 Microphone Test - Serial Plotter");
 
   // Configure I2S
@@ -52,11 +52,13 @@ void loop() {
 
   for (int i = 0; i < samples; i++) {
     sum += abs(audio_samples[i]);
+    // Serial.println(audio_samples[i]);
   }
 
   int32_t average_amplitude = sum / samples;
 
   // Serial.println(average_amplitude);
+  // Serial.write((uint8_t*)audio_samples, bytes_read);
   Serial.write((uint8_t*)audio_samples, bytes_read);
   delay(10);
 }

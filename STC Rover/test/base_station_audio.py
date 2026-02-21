@@ -1,31 +1,26 @@
 import serial
 import numpy as np
-import sounddevice as sd
-import time
+from scipy.io.wavfile import write
 
-SERIAL_PORT = "COM7"
-BAUDRATE = 115200
-SAMPLE_RATE = 16000
-CHUNK_SIZE = 1024  # samples per callback
+# Serial setup
+ser = serial.Serial('COM7', 921600)
 
-ser = serial.Serial(SERIAL_PORT, BAUDRATE)
+# Parameters
+sample_rate = 16000       # same as ESP32
+num_samples = 16000 * 5   # record 5 seconds
 
-def audio_callback(outdata, frames, time_info, status):
-    raw = ser.read(CHUNK_SIZE * 4)  # 4 bytes per int32 sample
-    audio = np.frombuffer(raw, dtype=np.int32)
-    audio = audio.astype(np.float32) / 2147483648.0  # normalize
-    outdata[:] = audio.reshape(-1, 1)
+# Read raw data
+raw_data = bytearray()
+while len(raw_data) < num_samples * 4:  # 4 bytes per sample
+    raw_data += ser.read(4096)
 
-with sd.OutputStream(
-    samplerate=SAMPLE_RATE,
-    channels=1,
-    dtype='float32',
-    callback=audio_callback,
-    blocksize=CHUNK_SIZE
-):
-    print("Streaming audio from ESP32...")
-    try:
-        while True:
-            time.sleep(0.1)  # keep main thread alive
-    except KeyboardInterrupt:
-        print("Stopped streaming")
+# Convert bytes to 32-bit signed integers
+audio_samples = np.frombuffer(raw_data, dtype=np.int32)
+
+# Normalize to 16-bit PCM
+audio_16bit = np.int16(audio_samples / (2**31) * 32767)
+
+# Save as WAV
+write("mic_recording.wav", sample_rate, audio_16bit)
+
+print("Saved mic_recording.wav! Play it with any audio player.")
