@@ -36,8 +36,8 @@ ws = websocket.WebSocket()
 # ws.settimeout(1)  
 
 try:
-    # ip_string = "ws://stc_esp.local:81/ws"  # For home Wifi
-    ip_string = "ws://10.15.30.137:81/ws"   # For byui Wifi
+    ip_string = "ws://stc_esp.local:81/ws"  # For home Wifi
+    # ip_string = "ws://10.15.30.137:81/ws"   # For byui Wifi
     ws.connect(ip_string)
     print("WebSocket connection success!")
     ws_connected = True
@@ -72,12 +72,12 @@ class ReconnectThread(QThread):
                 time.sleep(1)
 
 class SerialThread(QThread):
-    data_received = pyqtSignal(float, float, int)
+    data_received = pyqtSignal(float, float, int, int)
     connection_changed = pyqtSignal(bool)
 
     def run(self):
         handeld = None
-        x = y = reverse = None
+        x = y = reverse = dime = None
         while True:
             if handeld is None:
                 try:
@@ -98,13 +98,15 @@ class SerialThread(QThread):
                     y = float(line[2:])
                 elif line.startswith("R:"):
                     reverse = int(line[2:])
+                elif line.startswith("D:"):
+                    dime = int(line[2:])
 
                 # print(f"x{x}, y{y}, reverse{reverse}")
 
-                if x is not None and y is not None and reverse is not None:
-                    self.data_received.emit(x, y, reverse)
+                if x is not None and y is not None and reverse is not None and dime is not None:
+                    self.data_received.emit(x, y, reverse, dime)
                     # print(f"X: {x}, y: {y}, Reverse: {reverse}")
-                    x = y = reverse = None
+                    x = y = reverse = dime = None
 
             except (serial.SerialException, OSError) as e:
                 print(f"Handheld disconnected: {e}")
@@ -112,7 +114,7 @@ class SerialThread(QThread):
                     handeld.close()
                 except:
                     pass    
-                self.data_received.emit(0, 0, 0) # Turn off motors
+                self.data_received.emit(0, 0, 0, 0) # Turn off motors
                 self.connection_changed.emit(False)
                 handeld = None  # will retry connection on next loop
             except ValueError:
@@ -230,32 +232,41 @@ class MainWindow(QMainWindow):
             ws_connected = False
             self.start_reconnect()  # non-blocking reconnect
 
-    def control_data(self, turn, y, reverse):
+    def control_data(self, turn, y, reverse, dime):
         if not ws_connected:
             return  # skip everything if ESP is disconnected
+
+        # turn on a dime
+        if (dime):
+            self.send(RIGHT_MOTORS, 200, 0) # right motors reversed
+            self.send(LEFT_MOTORS, 200, 0)
+            self.smoothed_y = 0  #reset speed smoothing
+            return
 
         alpha = 0.1  # smoothing factor
         self.smoothed_y += alpha * (y - self.smoothed_y)
         self.smoothed_turn += alpha * (turn - self.smoothed_turn)
 
         # convert smoothed values to PWM
-        # y_pwm = int(max(0, min(255, abs(self.smoothed_y) * 255)))       # Max speeds
-        y_pwm = int(max(0, min(255, abs(self.smoothed_y) * 255)) / 2) # Halfed speeds
+        y_pwm = int(max(0, min(255, abs(self.smoothed_y) * 255)))       # Max speeds
+        # y_pwm = int(max(0, min(255, abs(self.smoothed_y) * 255)) / 2) # Halfed speeds
         # print(y_pwm)
         turn_value = int(y_pwm * (1 - min(1, abs(self.smoothed_turn))))
 
         # soft reverse logic
         current_direction = 0 if self.smoothed_y >= 0 else 1
+        right_direction = 1 - current_direction   # invert only right side
 
+        # TODO: turning needs to be more responsive
         try:
             if -0.1 <= self.smoothed_turn <= 0.1:
-                self.send(RIGHT_MOTORS, y_pwm, current_direction)
+                self.send(RIGHT_MOTORS, y_pwm, right_direction)
                 self.send(LEFT_MOTORS, y_pwm, current_direction)
             elif self.smoothed_turn > 0.1:
                 self.send(LEFT_MOTORS, y_pwm, current_direction)
-                self.send(RIGHT_MOTORS, turn_value, current_direction)
+                self.send(RIGHT_MOTORS, turn_value, right_direction)
             elif self.smoothed_turn < -0.1:
-                self.send(RIGHT_MOTORS, y_pwm, current_direction)
+                self.send(RIGHT_MOTORS, y_pwm, right_direction)
                 self.send(LEFT_MOTORS, turn_value, current_direction)
         except (websocket.WebSocketConnectionClosedException, ConnectionResetError):
             print("ESP disconnected during normal send, skipping frame")

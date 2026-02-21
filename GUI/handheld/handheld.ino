@@ -1,14 +1,13 @@
 
-#define Switch_Pin 2
-#define Pot_PIN A0 
 #define ANALOG_X_PIN A2 
 #define ANALOG_Y_PIN A3 
+#define BUTTON_PIN A4
 
 struct analog { 
     // float x, y;
     float x;
     float y;
-    int pot;
+    int dime;  // Turn on a dime
     int reverse;
 }; 
 
@@ -18,7 +17,7 @@ float readAnalogAxisLevel(int pin);
 void setup() 
 { 
   Serial.begin(115200); 
-  pinMode(Switch_Pin, INPUT_PULLUP);
+  pinMode(BUTTON_PIN, INPUT_PULLUP);
 } 
 
 void loop() 
@@ -26,6 +25,7 @@ void loop()
 
     // Serial.println(analogRead(ANALOG_X_PIN)); // Debug
     // Serial.println(analogRead(ANALOG_Y_PIN)); // Debug
+    // Serial.println(digitalRead(BUTTON_PIN)); // Debug
 
     analog control; 
 
@@ -40,6 +40,10 @@ void loop()
     control.reverse = (control.y >= 0) ? 0: 1;
     Serial.print("R:"); 
     Serial.println(control.reverse);  
+
+    control.dime = !digitalRead(BUTTON_PIN);
+    Serial.print("D:"); 
+    Serial.println(control.dime);  
     delay(50);
 } 
 
