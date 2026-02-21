@@ -17,8 +17,9 @@ while len(raw_data) < num_samples * 4:  # 4 bytes per sample
 # Convert bytes to 32-bit signed integers
 audio_samples = np.frombuffer(raw_data, dtype=np.int32)
 
-# Normalize to 16-bit PCM
-audio_16bit = np.int16(audio_samples / (2**31) * 32767)
+# Normalize by the maximum absolute value to fill 16-bit range
+max_val = np.max(np.abs(audio_samples))
+audio_16bit = np.int16(audio_samples / max_val * 32767)
 
 # Save as WAV
 write("mic_recording.wav", sample_rate, audio_16bit)
