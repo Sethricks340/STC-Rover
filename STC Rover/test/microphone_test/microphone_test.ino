@@ -6,6 +6,10 @@
 #define I2S_SCK 33
 #define I2S_SD 32
 
+// #define I2S_WS 25
+// #define I2S_SCK 26
+// #define I2S_SD 32
+
 // I2S configuration
 #define I2S_SAMPLE_RATE 16000
 #define I2S_BUFFER_SIZE 1024
