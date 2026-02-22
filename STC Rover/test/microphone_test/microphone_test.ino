@@ -66,20 +66,3 @@ void loop() {
   Serial.write((uint8_t*)audio_samples, bytes_read);
   delay(10);
 }
-
-// void loop() {
-//     int32_t audio_samples[I2S_BUFFER_SIZE];
-//     size_t bytes_read;
-
-//     i2s_read(I2S_NUM_0, audio_samples, sizeof(audio_samples), &bytes_read, portMAX_DELAY);
-
-//     // Print first 5 samples to confirm data
-//     Serial.print("Samples: ");
-//     for (int i = 0; i < 5; i++) {
-//         Serial.print(audio_samples[i]);
-//         Serial.print(" ");
-//     }
-//     Serial.println();
-
-//     delay(100);
-// }

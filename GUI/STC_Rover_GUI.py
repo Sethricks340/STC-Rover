@@ -1,4 +1,5 @@
-# TODO: Things the GUI might have:
+# TODO: 
+# Things the GUI might have:
     # Camera Feed
     # Camera Direction Gimball
     # 4-Directional Directional Control
@@ -10,6 +11,8 @@
 # GUI doesn't crash when ESP disconnects, but it is slow to realize it (to changing the connected label)
 # Still doesn't connect from different WIFIs :(
 # Joystick is really sensitive?
+# Stream microphone audio from wifi instead of over serial
+# Get valid audio to microphone
 
 import time
 import serial

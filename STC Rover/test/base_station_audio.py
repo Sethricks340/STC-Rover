@@ -10,12 +10,13 @@ SAMPLE_RATE = 16000
 CHUNK_SAMPLES = 1024
 CHUNK_BYTES = CHUNK_SAMPLES * 4  # 4 bytes per int32 sample
 
-# High-pass filter constant
+# High-pass filter constant, blocks most of background noise
 HPF_ALPHA = 0.995
 
 # Fixed gain
 GAIN = 1.0 / 50000.0
 
+# Start the serial port
 ser = serial.Serial(PORT, BAUD)
 
 # Jitter buffer (stores several chunks)
