@@ -84,7 +84,7 @@ class SerialThread(QThread):
         while True:
             if handeld is None:
                 try:
-                    handeld = serial.Serial("COM5", 115200, timeout=1) # TODO: Search for COM instead of hardcoding 
+                    handeld = serial.Serial("COM4", 115200, timeout=1) # TODO: Search for COM instead of hardcoding 
                     print("Handheld connected")
                     self.connection_changed.emit(True)
                 except serial.SerialException:
@@ -256,8 +256,8 @@ class MainWindow(QMainWindow):
 
         turn_strength = min(1.0, abs(self.smoothed_turn))
 
-        # base = int(abs(self.smoothed_y) * 255)  # Max speeds
-        base = int(abs(self.smoothed_y) * 255 / 2)  # Halfed speeds (doesn't work as well)
+        base = int(abs(self.smoothed_y) * 255)  # Max speeds
+        # base = int(abs(self.smoothed_y) * 255 / 2)  # Halfed speeds (doesn't work as well)
         boost = int(base * turn_strength) # outside wheel turning
 
         if turn_strength > 0.7: cut = 0
