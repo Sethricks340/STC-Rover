@@ -3,6 +3,7 @@ import numpy as np
 import sounddevice as sd
 import threading
 from collections import deque
+import time
 
 PORT = "COM7"
 BAUD = 921600
@@ -18,6 +19,8 @@ GAIN = 1.0 / 50000.0
 
 # Start the serial port
 ser = serial.Serial(PORT, BAUD)
+time.sleep(1.0)              # wait for ESP32 reset + I2S start
+ser.reset_input_buffer()     # discard garbage
 
 # Jitter buffer (stores several chunks)
 audio_queue = deque(maxlen=10)
