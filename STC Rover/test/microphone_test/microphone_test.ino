@@ -6,10 +6,6 @@
 #define I2S_SCK 33
 #define I2S_SD 32
 
-// #define I2S_WS 25
-// #define I2S_SCK 26
-// #define I2S_SD 32
-
 // I2S configuration
 #define I2S_SAMPLE_RATE 16000
 #define I2S_BUFFER_SIZE 1024
@@ -51,18 +47,8 @@ void loop() {
 
   i2s_read(I2S_NUM_0, audio_samples, sizeof(audio_samples), &bytes_read, portMAX_DELAY);
 
-  int64_t sum = 0;
   int samples = bytes_read / sizeof(int32_t);
 
-  for (int i = 0; i < samples; i++) {
-    sum += abs(audio_samples[i]);
-    // Serial.println(audio_samples[i]);
-  }
-
-  int32_t average_amplitude = sum / samples;
-
-  // Serial.println(average_amplitude);
-  // Serial.write((uint8_t*)audio_samples, bytes_read);
   Serial.write((uint8_t*)audio_samples, bytes_read);
-  delay(10);
+  // delay(10);
 }
