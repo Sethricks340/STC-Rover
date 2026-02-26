@@ -7,7 +7,8 @@ import threading
 from collections import deque
 import time
 
-WS_URL = "ws://stc_esp.local:81/audio"
+WS_URL = "ws://stc_esp.local:81/audio"  # For home Wifi
+# WS_URL = "ws://10.15.30.137:81/audio"   # For byui Wifi
 
 SAMPLE_RATE = 16000
 CHUNK_SAMPLES = 1024

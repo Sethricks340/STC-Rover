@@ -1,4 +1,5 @@
 // TODO: Scan for available wifi instead of hard coding
+// make ip address persist on public wifi
 
 #include <WiFi.h>
 #include <Arduino.h>
