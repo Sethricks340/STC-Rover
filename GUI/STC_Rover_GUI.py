@@ -84,7 +84,7 @@ class SerialThread(QThread):
         while True:
             if handeld is None:
                 try:
-                    handeld = serial.Serial("COM4", 115200, timeout=1) # TODO: Search for COM instead of hardcoding 
+                    handeld = serial.Serial("COM5", 115200, timeout=1) # TODO: Search for COM instead of hardcoding 
                     print("Handheld connected")
                     self.connection_changed.emit(True)
                 except serial.SerialException:

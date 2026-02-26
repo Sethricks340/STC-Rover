@@ -42,6 +42,21 @@ uint32_t activeClientId = 0;
 #define I2S_SAMPLE_RATE 16000
 #define I2S_BUFFER_SIZE 1024
 
+AsyncWebSocket audio_ws("/audio");  // new endpoint
+uint32_t activeAudioClient = 0;
+
+void onAudioWS(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType type,
+               void *arg, uint8_t *data, size_t len) {
+    if(type == WS_EVT_CONNECT) {
+        if(activeAudioClient != 0) client->close(); // only 1 audio client
+        activeAudioClient = client->id();
+        Serial.printf("Audio client connected: %u\n", activeAudioClient);
+    } else if(type == WS_EVT_DISCONNECT) {
+        if(client->id() == activeAudioClient) activeAudioClient = 0;
+        Serial.println("Audio client disconnected");
+    }
+}
+
 void motor_on(int number, int pwm, int direction) {
     int inA, inB, channel;
 
@@ -204,11 +219,11 @@ void setup() {
 
 void loop() {
   // Send ping to all connected clients every 1 second
-  // if (millis() - lastPingTime > PING_INTERVAL) {
-  //     lastPingTime = millis();
-  //     ws.pingAll();  // Send ping to detect dead connections
-  //     ws.cleanupClients();
-  // }   
+  if (millis() - lastPingTime > PING_INTERVAL) {
+      lastPingTime = millis();
+      ws.pingAll();  // Send ping to detect dead connections
+      ws.cleanupClients();
+  }   
   
 
 
@@ -220,8 +235,11 @@ void loop() {
 
   // Serial.write((uint8_t*)audio_samples, bytes_read);
   // ws.binary(activeClientId, (uint8_t*)audio_samples, bytes_read);
-  if (activeClientId != 0) {
-    ws.binary(activeClientId, (uint8_t*)audio_samples, bytes_read);
+  // if (activeClientId != 0) {
+  //   ws.binary(activeClientId, (uint8_t*)audio_samples, bytes_read);
+  // }
+  if(activeAudioClient != 0) {
+    ws.binary(activeAudioClient, (uint8_t*)audio_samples, bytes_read);
   }
 }
 
