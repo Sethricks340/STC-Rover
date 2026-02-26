@@ -48,12 +48,18 @@ uint32_t activeAudioClient = 0;
 void onAudioWS(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType type,
                void *arg, uint8_t *data, size_t len) {
     if(type == WS_EVT_CONNECT) {
-        if(activeAudioClient != 0) client->close(); // only 1 audio client
+        if(activeAudioClient != 0) {
+            Serial.println("Closing previous audio client");
+            AsyncWebSocketClient* prev = server->client(activeAudioClient);
+            if (prev) prev->close();
+        }
         activeAudioClient = client->id();
         Serial.printf("Audio client connected: %u\n", activeAudioClient);
     } else if(type == WS_EVT_DISCONNECT) {
-        if(client->id() == activeAudioClient) activeAudioClient = 0;
-        Serial.println("Audio client disconnected");
+        if(client->id() == activeAudioClient) {
+            activeAudioClient = 0;
+            Serial.println("Audio client disconnected");
+        }
     }
 }
 

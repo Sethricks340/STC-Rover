@@ -79,6 +79,7 @@ import numpy as np
 import sounddevice as sd
 import threading
 from collections import deque
+import time
 
 WS_URL = "ws://stc_esp.local:81/audio"
 # ws_audio = websocket.WebSocket()
@@ -99,42 +100,52 @@ def ws_reader():
     print("WebSocket connected")
 
     while True:
-        # raw = ws.recv()  # receives binary frame
-        # samples = np.frombuffer(raw, dtype=np.int32)
+        try:
+            raw = ws.recv()
+            if len(raw) == 0:
+                continue
+            # raw = ws.recv()  # receives binary frame
+            # samples = np.frombuffer(raw, dtype=np.int32)
 
 
-        raw = ws.recv()
-        print("bytes:", len(raw))
+            # raw = ws.recv()
+            print("bytes:", len(raw))
 
-        samples = np.frombuffer(raw, dtype=np.int32)
-        print("samples:", len(samples),
-            "min:", samples.min() if len(samples) else None,
-            "max:", samples.max() if len(samples) else None)
+            samples = np.frombuffer(raw, dtype=np.int32)
+            print("samples:", len(samples),
+                "min:", samples.min() if len(samples) else None,
+                "max:", samples.max() if len(samples) else None)
 
-        if len(samples) == 0:
-            continue
+            if len(samples) == 0:
+                continue
 
-        samples = samples >> 14  # shift INMP441 data
+            samples = samples >> 14  # shift INMP441 data
 
-        filtered = np.zeros_like(samples, dtype=np.float32)
-        filtered[0] = samples[0] - prev_sample
+            filtered = np.zeros_like(samples, dtype=np.float32)
+            filtered[0] = samples[0] - prev_sample
 
-        for i in range(1, len(samples)):
-            filtered[i] = HPF_ALPHA * (filtered[i-1] + samples[i] - samples[i-1])
+            for i in range(1, len(samples)):
+                filtered[i] = HPF_ALPHA * (filtered[i-1] + samples[i] - samples[i-1])
 
-        prev_sample = samples[-1]
+            prev_sample = samples[-1]
 
-        # audio = np.clip(filtered * GAIN, -1.0, 1.0)
-        # audio_queue.append(audio)
+            # audio = np.clip(filtered * GAIN, -1.0, 1.0)
+            # audio_queue.append(audio)
 
-        # audio = samples.astype(np.float32) / 2**21
-        # audio_queue.append(np.clip(audio, -1.0, 1.0))
+            # audio = samples.astype(np.float32) / 2**21
+            # audio_queue.append(np.clip(audio, -1.0, 1.0))
 
 
-        audio = samples.astype(np.float32)
-        audio /= (np.max(np.abs(audio)) + 1e-9)
-        audio *= 0.8   # loud
-        audio_queue.append(audio)
+            audio = samples.astype(np.float32)
+            audio /= (np.max(np.abs(audio)) + 1e-9)
+            audio *= 0.8   # loud
+            audio_queue.append(audio)
+
+        except websocket.WebSocketConnectionClosedException:
+            print("WebSocket closed, reconnecting...")
+            time.sleep(0.5)
+            ws = websocket.WebSocket()
+            ws.connect(WS_URL)
 
 def audio_callback(outdata, frames, time, status):
     if len(audio_queue) > 0:
