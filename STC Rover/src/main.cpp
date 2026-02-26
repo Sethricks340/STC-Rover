@@ -187,6 +187,8 @@ void setup() {
 
   ws.onEvent(onWebSocketEvent);
   server.addHandler(&ws);
+  audio_ws.onEvent(onAudioWS);
+  server.addHandler(&audio_ws);
   server.begin();
 
   // Configure I2S
@@ -239,7 +241,7 @@ void loop() {
   //   ws.binary(activeClientId, (uint8_t*)audio_samples, bytes_read);
   // }
   if(activeAudioClient != 0) {
-    ws.binary(activeAudioClient, (uint8_t*)audio_samples, bytes_read);
+      audio_ws.binary(activeAudioClient, (uint8_t*)audio_samples, bytes_read);
   }
 }
 

@@ -80,7 +80,9 @@ import sounddevice as sd
 import threading
 from collections import deque
 
-WS_URL = "ws://stc_esp.local:81/ws"
+WS_URL = "ws://stc_esp.local:81/audio"
+# ws_audio = websocket.WebSocket()
+# ws_audio.connect(WS_URL)
 
 SAMPLE_RATE = 16000
 CHUNK_SAMPLES = 1024
