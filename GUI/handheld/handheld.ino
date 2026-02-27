@@ -29,11 +29,16 @@ void loop()
 
     analog control; 
 
-    control.x = readAnalogAxisLevel(ANALOG_X_PIN)  * - 1.0f; // Flip x axis
+    // control.x = readAnalogAxisLevel(ANALOG_X_PIN)  * - 1.0f; // Flip x axis
+    // control.x = abs(readAnalogAxisLevel(ANALOG_X_PIN)) > 0.05 ? abs(readAnalogAxisLevel(ANALOG_X_PIN)) * -1.0f : 0;  // Flip x axis
+    float x = readAnalogAxisLevel(ANALOG_X_PIN);
+    control.x = (abs(x) > 0.05) ? x * -1.0f : 0;
     Serial.print("X:"); 
     Serial.println(control.x); 
 
-    control.y = readAnalogAxisLevel(ANALOG_Y_PIN); 
+    float y = readAnalogAxisLevel(ANALOG_Y_PIN);
+    control.y = (abs(y) > 0.05) ? y : 0;
+
     Serial.print("Y:"); 
     Serial.println(control.y);
 

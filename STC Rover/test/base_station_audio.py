@@ -1,4 +1,4 @@
-# TODO: static background noise, delay, choppy
+#TODO: keeps disconnecting. 
 
 import websocket
 import numpy as np
@@ -12,55 +12,45 @@ WS_URL = "ws://stc_esp.local:81/audio"  # For home Wifi
 
 SAMPLE_RATE = 16000
 CHUNK_SAMPLES = 1024
-HPF_ALPHA = 0.9
-GAIN = 1.0 / 50000.0
+# HPF_ALPHA = 0.9
+HPF_ALPHA = 0.995
+GAIN = 1.0 / 5000.0
 
 audio_queue = deque(maxlen=20)
 
 def ws_reader():
     prev_sample = 0
-
     ws = websocket.WebSocket()
     ws.connect(WS_URL)
     print("WebSocket connected")
 
+    buffer = bytearray()  # accumulate incoming bytes
+
     while True:
         try:
-            raw = ws.recv() # receive binary frame
-            if len(raw) == 0:
+            raw = ws.recv()
+            if not raw:
                 continue
 
-            # raw = ws.recv()
-            print("bytes:", len(raw))
+            buffer.extend(raw)  # add incoming bytes
 
-            samples = np.frombuffer(raw, dtype=np.int32)
-            print("samples:", len(samples),
-                "min:", samples.min() if len(samples) else None,
-                "max:", samples.max() if len(samples) else None)
+            # Process full chunks only
+            while len(buffer) >= CHUNK_SAMPLES * 4:  # 4 bytes per int32
+                chunk_bytes = buffer[:CHUNK_SAMPLES*4]
+                buffer = buffer[CHUNK_SAMPLES*4:]
 
-            if len(samples) == 0:
-                continue
+                samples = np.frombuffer(chunk_bytes, dtype=np.int32)
+                samples = samples >> 14  # shift INMP441 data
 
-            samples = samples >> 14  # shift INMP441 data to account for header
+                filtered = np.zeros_like(samples, dtype=np.float32)
+                filtered[0] = samples[0] - prev_sample
+                for i in range(1, len(samples)):
+                    filtered[i] = HPF_ALPHA * (filtered[i-1] + samples[i] - samples[i-1])
+                prev_sample = samples[-1]
 
-            filtered = np.zeros_like(samples, dtype=np.float32)
-            filtered[0] = samples[0] - prev_sample
-
-            for i in range(1, len(samples)):
-                filtered[i] = HPF_ALPHA * (filtered[i-1] + samples[i] - samples[i-1])
-
-            prev_sample = samples[-1]
-
-            # audio = np.clip(filtered * GAIN, -1.0, 1.0)
-            # audio_queue.append(audio)
-
-            # audio = samples.astype(np.float32) / 2**21
-            # audio_queue.append(np.clip(audio, -1.0, 1.0))
-
-            audio = samples.astype(np.float32)
-            audio /= (np.max(np.abs(audio)) + 1e-9)
-            audio *= 0.8   # loud
-            audio_queue.append(audio)
+                audio = filtered * GAIN
+                audio = np.clip(audio, -1.0, 1.0)
+                audio_queue.append(audio)
 
         except websocket.WebSocketConnectionClosedException:
             print("WebSocket closed, reconnecting...")
