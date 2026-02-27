@@ -1,22 +1,27 @@
 # ESP32-CAM Programming via Arduino Uno
-This program uses the Arduino UNO as a USB-to_serial converter to program the ESP-32 cam. The ESP connects to the wifi and allows video streaming and viewing via the IP address.
+This program uses the Arduino UNO as a USB-to-serial converter to program the ESP-32 cam. The ESP connects to the wifi and allows video streaming and viewing via the IP address.
 ## Wiring
 
-| ESP32-CAM | Arduino Uno |
+| ESP32-CAM     | Arduino Uno     |
 |-----------|-------------|
-| U0R       | RX          |
-| U0T       | TX          |
-| 5V        | 5V          |
-| GND       | GND         |
-The UNO must also have the RST pin connected to the GND to bypass the UNO CPU. 
+| **U0R**       | **RX**          |
+| **U0T**       | **TX**          |
+| **5V**        | **5V**          |
+| **GND**       | **GND**         |
+
+
+The UNO must also have the **RST** pin connected to the **GND** to bypass the UNO CPU. 
 ## Upload Procedure
-1. Connect the ESP's IO0 to the ESP's GND. 
-2. When the terminal prompts say "Connecting..." press the REST button on the ESP. 
-3. Once the code is done uploading, disconnect the IO0 and GND and press the RST button again.
+1. Connect the ESP's **IO0** to the ESP's **GND**. 
+2. When the terminal prompts say "Connecting..." press the RST button on the ESP. 
+3. Once the code is done uploading, disconnect the **IO0** and **GND** and press the RST button again.
 4. You should then be able to copy and paste the IP address from the serial moniter into your browser and see teh camera output.
 
 ## Troubleshooting
-Possible Issue: '''A fatal error occurred: Failed to connect to ESP32: No serial data received.'''
+Possible Issue: 
+```
+A fatal error occurred: Failed to connect to ESP32: No serial data received.
+'''
 Fix: Check wiring, make sure that the Arduino IDE is using the correct board/port. Unplug the UNO, reconnect, and try again.
 
 Possible Issue: 
