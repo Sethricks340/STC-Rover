@@ -11,9 +11,8 @@
 # GUI doesn't crash when ESP disconnects, but it is slow to realize it (to changing the connected label)
 # Still doesn't connect from different WIFIs :(
 
-# Start Audio file from this file
-    # Put audio connected/disconnected status on GUI
-    # Restart audio button
+# Put audio connected/disconnected status on GUI
+# Restart audio button
 
 import time
 import serial
@@ -32,6 +31,13 @@ from PyQt6.QtWidgets import (
     QSlider,
     QLabel
 )
+import subprocess
+import sys
+import os
+
+audio_script = os.path.join(os.path.dirname(__file__), r"microphone\base_station_audio.py")
+
+subprocess.Popen([sys.executable, audio_script])
 
 RIGHT_MOTORS = 0
 LEFT_MOTORS = 1
