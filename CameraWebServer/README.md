@@ -21,7 +21,7 @@ The UNO must also have the **RST** pin connected to the **GND** to bypass the UN
 Possible Issue: 
 ```
 A fatal error occurred: Failed to connect to ESP32: No serial data received.
-'''
+```
 Fix: Check wiring, make sure that the Arduino IDE is using the correct board/port. Unplug the UNO, reconnect, and try again.
 
 Possible Issue: 
