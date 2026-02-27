@@ -10,9 +10,10 @@
 # Known Issues:
 # GUI doesn't crash when ESP disconnects, but it is slow to realize it (to changing the connected label)
 # Still doesn't connect from different WIFIs :(
-# Joystick is really sensitive?
-# Stream microphone audio from wifi instead of over serial
-# Get valid audio to microphone
+
+# Start Audio file from this file
+    # Put audio connected/disconnected status on GUI
+    # Restart audio button
 
 import time
 import serial
