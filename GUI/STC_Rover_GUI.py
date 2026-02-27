@@ -35,9 +35,7 @@ import subprocess
 import sys
 import os
 
-audio_script = os.path.join(os.path.dirname(__file__), r"microphone\base_station_audio.py")
-
-subprocess.Popen([sys.executable, audio_script])
+# audio_script = os.path.join(os.path.dirname(__file__), r"microphone\base_station_audio.py")
 
 RIGHT_MOTORS = 0
 LEFT_MOTORS = 1
@@ -136,6 +134,9 @@ class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
 
+        self.audio_process = None
+        self.start_audio()
+
         self.setWindowTitle("STC Rover")
 
         self.serial_thread = SerialThread()
@@ -208,6 +209,22 @@ class MainWindow(QMainWindow):
         container.setLayout(layout)
         self.setCentralWidget(container)
 
+    def start_audio(self):
+        # terminate if already running
+        if self.audio_process is not None:
+            self.audio_process.terminate()
+            self.audio_process.wait()
+        # start new process
+        audio_script = os.path.join(os.path.dirname(__file__), r"microphone\base_station_audio.py")
+        self.audio_process = subprocess.Popen([sys.executable, audio_script])
+
+    def closeEvent(self, event):
+        # terminate audio process when GUI closes
+        if self.audio_process is not None:
+            self.audio_process.terminate()
+            self.audio_process.wait()
+        event.accept()  # continue closing the window
+    
     def start_reconnect(self):
         # Only start if no thread exists or the previous one stopped
         if self.reconnect_thread is None or not self.reconnect_thread.isRunning():
