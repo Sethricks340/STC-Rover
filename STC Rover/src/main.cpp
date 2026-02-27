@@ -8,10 +8,10 @@
 #include <driver/i2s.h>
 
 // WiFi credentials
-const char* ssid = "Threat Level Midnight";
-const char* password = "cowabunga2!!";
-// const char* ssid = "BYUI_Visitor";
-// const char* password = "";
+// const char* ssid = "Threat Level Midnight";
+// const char* password = "cowabunga2!!";
+const char* ssid = "BYUI_Visitor";
+const char* password = "";
 
 // WebSocket server
 AsyncWebServer server(81);

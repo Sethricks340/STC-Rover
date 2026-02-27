@@ -35,8 +35,6 @@ import subprocess
 import sys
 import os
 
-# audio_script = os.path.join(os.path.dirname(__file__), r"microphone\base_station_audio.py")
-
 RIGHT_MOTORS = 0
 LEFT_MOTORS = 1
 
@@ -44,8 +42,8 @@ ws = websocket.WebSocket()
 # ws.settimeout(1)  
 
 try:
-    ip_string = "ws://stc_esp.local:81/ws"  # For home Wifi
-    # ip_string = "ws://10.15.30.137:81/ws"   # For byui Wifi
+    # ip_string = "ws://stc_esp.local:81/ws"  # For home Wifi
+    ip_string = "ws://10.15.44.90:81/ws"   # For byui Wifi
     ws.connect(ip_string)
     print("WebSocket connection success!")
     ws_connected = True
@@ -89,8 +87,23 @@ class SerialThread(QThread):
         while True:
             if handeld is None:
                 try:
-                    handeld = serial.Serial("COM5", 115200, timeout=1) # TODO: Search for COM instead of hardcoding 
-                    print("Handheld connected")
+                    # handeld = serial.Serial("COM5", 115200, timeout=1) # TODO: Search for COM instead of hardcoding 
+                    # print("Handheld connected")
+
+                    import serial.tools.list_ports
+                    ports = serial.tools.list_ports.comports()
+                    for port in ports:
+                        if "USB-SERIAL CH340" in port.description: # Search for keyword
+                            print(f"Found Handheld: {port.device}")
+                            # ser = serial.Serial(port.device, 115200)
+                            handeld = serial.Serial(port.device, 115200, timeout=1)
+
+
+        #                         if "USB-SERIAL CH340" in port.description:
+        # print(f"Found Handheld: {port.device}")
+        # handeld = serial.Serial(port.device, 115200, timeout=1)
+        # break
+
                     self.connection_changed.emit(True)
                 except serial.SerialException:
                     print("Handheld not connected, retrying in 1 second...")
