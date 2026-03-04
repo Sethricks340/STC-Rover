@@ -32,7 +32,7 @@ const int resolution = 8;
 
 unsigned long lastPingTime = 0;
 const unsigned long PING_INTERVAL = 500; // Send ping at 2 Hz
-uint32_t activeClientId = 0;
+// uint32_t activeClientId = 0;
 
 // I2S pins
 #define I2S_WS 14
@@ -44,23 +44,26 @@ uint32_t activeClientId = 0;
 #define I2S_BUFFER_SIZE 1024
 
 AsyncWebSocket audio_ws("/audio");  // new endpoint
-uint32_t activeAudioClient = 0;
+// uint32_t activeAudioClient = 0;
 
 void onAudioWS(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType type,
                void *arg, uint8_t *data, size_t len) {
     if(type == WS_EVT_CONNECT) {
-        if(activeAudioClient != 0) {
-            Serial.println("Closing previous audio client");
-            AsyncWebSocketClient* prev = server->client(activeAudioClient);
-            if (prev) prev->close();
-        }
-        activeAudioClient = client->id();
-        Serial.printf("Audio client connected: %u\n", activeAudioClient);
+        // if(activeAudioClient != 0) {
+        //     Serial.println("Closing previous audio client");
+        //     AsyncWebSocketClient* prev = server->client(activeAudioClient);
+        //     if (prev) prev->close();
+        // }
+        // activeAudioClient = client->id();
+        // Serial.printf("Audio client connected: %u\n", activeAudioClient);
+        // Serial.printf("Audio client connected: %u\n", activeAudioClient);
+        Serial.printf("Audio client connected: %u\n", client->id());
     } else if(type == WS_EVT_DISCONNECT) {
-        if(client->id() == activeAudioClient) {
-            activeAudioClient = 0;
-            Serial.println("Audio client disconnected");
-        }
+        // if(client->id() == activeAudioClient) {
+        //     activeAudioClient = 0;
+        //     Serial.println("Audio client disconnected");
+        // }
+        Serial.printf("Audio client connected: %u\n", client->id());
     }
 }
 
@@ -112,31 +115,34 @@ void onWebSocketEvent(
 
     if (type == WS_EVT_CONNECT) {
 
-        if (activeClientId != 0){
-            Serial.printf("Rejecting client %u, already connected to client %u\n"),
-                client->id(), activeClientId;
-                client->close();
-                return;
-        }
-        activeClientId = client->id();
-        Serial.printf("Client connected: %u\n", activeClientId);
+        // if (activeClientId != 0){
+        //     Serial.printf("Rejecting client %u, already connected to client %u\n"),
+        //         client->id(), activeClientId;
+        //         client->close();
+        //         return;
+        // }
+        // activeClientId = client->id();
+        // Serial.printf("Client connected: %u\n", activeClientId);
+        Serial.printf("Client connected: %u\n", client->id());
     }
 
     else if (type == WS_EVT_DISCONNECT) {
         Serial.printf("Client disconnected: %u\n", client->id());
-        if (ws.count() == 0) {
-            Serial.println("No clients connected");
-            activeClientId = 0;
-            motor_off(0);
-            motor_off(1);
-        }
+        motor_off(0);
+        motor_off(1);
+        // if (ws.count() == 0) {
+        //     Serial.println("No clients connected");
+        //     activeClientId = 0;
+        //     motor_off(0);
+        //     motor_off(1);
+        // }
     }
 
     else if (type == WS_EVT_DATA) { // data received
         AwsFrameInfo *info = (AwsFrameInfo*)arg;
         if(info->final && info->len == 5 && info->opcode == WS_BINARY) {
 
-            if (client->id() != activeClientId) return;
+            // if (client->id() != activeClientId) return;
 
             byte opcode       = data[0];
             byte motor_number = data[1];
@@ -247,9 +253,10 @@ void loop() {
   // if (activeClientId != 0) {
   //   ws.binary(activeClientId, (uint8_t*)audio_samples, bytes_read);
   // }
-  if(activeAudioClient != 0) {
-      audio_ws.binary(activeAudioClient, (uint8_t*)audio_samples, bytes_read);
-  }
+//   if(activeAudioClient != 0) {
+//       audio_ws.binary(activeAudioClient, (uint8_t*)audio_samples, bytes_read);
+//   }
+    audio_ws.binaryAll((uint8_t*)audio_samples, bytes_read);
 }
 
 
