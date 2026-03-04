@@ -44,8 +44,8 @@ ws = websocket.WebSocket()
 # ws.settimeout(1)  
 
 try:
-    # ip_string = "ws://stc_esp.local:81/ws"  # For home Wifi
-    ip_string = "ws://10.15.44.90:81/ws"   # For byui Wifi
+    ip_string = "ws://stc_esp.local:81/ws"  # For home Wifi
+    # ip_string = "ws://10.15.44.90:81/ws"   # For byui Wifi
     ws.connect(ip_string)
     print("WebSocket connection success!")
     ws_connected = True
@@ -89,9 +89,6 @@ class SerialThread(QThread):
         while True:
             if handeld is None:
                 try:
-                    # handeld = serial.Serial("COM5", 115200, timeout=1) # TODO: Search for COM instead of hardcoding 
-                    # print("Handheld connected")
-
                     import serial.tools.list_ports
                     ports = serial.tools.list_ports.comports()
                     for port in ports:
@@ -99,20 +96,13 @@ class SerialThread(QThread):
                             print(f"Found Handheld: {port.device}")
                             # ser = serial.Serial(port.device, 115200)
                             handeld = serial.Serial(port.device, 115200, timeout=1)
-
-
-        #                         if "USB-SERIAL CH340" in port.description:
-        # print(f"Found Handheld: {port.device}")
-        # handeld = serial.Serial(port.device, 115200, timeout=1)
-        # break
-
                     self.connection_changed.emit(True)
+
                 except serial.SerialException:
                     print("Handheld not connected, retrying in 1 second...")
                     self.connection_changed.emit(False)
                     self.msleep(1000)
                     continue  # try again
-
             try:
                 line = handeld.readline().decode(errors="ignore").strip()
                 if line.startswith("X:"):
@@ -123,15 +113,13 @@ class SerialThread(QThread):
                     reverse = int(line[2:])
                 elif line.startswith("D:"):
                     dime = int(line[2:])
-
-                # print(f"x{x}, y{y}, reverse{reverse}")
-
                 if x is not None and y is not None and reverse is not None and dime is not None:
                     self.data_received.emit(x, y, reverse, dime)
                     # print(f"X: {x}, y: {y}, Reverse: {reverse}")
                     x = y = reverse = dime = None
 
-            except (serial.SerialException, OSError) as e:
+            # except (serial.SerialException, OSError) as e:
+            except Exception as e:
                 print(f"Handheld disconnected: {e}")
                 try:
                     handeld.close()
@@ -140,6 +128,7 @@ class SerialThread(QThread):
                 self.data_received.emit(0, 0, 0, 0) # Turn off motors
                 self.connection_changed.emit(False)
                 handeld = None  # will retry connection on next loop
+                continue
             except ValueError:
                 continue  # ignore bad lines
 
@@ -269,7 +258,8 @@ class MainWindow(QMainWindow):
 
         try:
             ws.send(binary_msg, opcode=websocket.ABNF.OPCODE_BINARY)
-        except (websocket.WebSocketConnectionClosedException, ConnectionResetError) as e:
+        # except (websocket.WebSocketConnectionClosedException, ConnectionResetError) as e:
+        except Exception as e:
             print(f"WebSocket send failed: {e}")
             ws_connected = False
             self.start_reconnect()  # non-blocking reconnect
