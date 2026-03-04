@@ -168,10 +168,10 @@ void onWebSocketEvent(
         }
     }
     
-    else if (type == WS_EVT_PONG) {
-        // Client responded to our ping - connection is alive
-        Serial.printf("Pong received from client %u\n", client->id()); 
-    }
+    // else if (type == WS_EVT_PONG) {
+    //     // Client responded to our ping - connection is alive
+    //     Serial.printf("Pong received from client %u\n", client->id()); 
+    // }
 }
 
 void setup() {
@@ -239,11 +239,11 @@ void setup() {
 
 void loop() {
   // Send ping to all connected clients every 1 second
-  if (millis() - lastPingTime > PING_INTERVAL) {
-      lastPingTime = millis();
-      ws.pingAll();  // Send ping to detect dead connections
-      ws.cleanupClients();
-    }   
+//   if (millis() - lastPingTime > PING_INTERVAL) {
+//       lastPingTime = millis();
+//       ws.pingAll();  // Send ping to detect dead connections
+//       ws.cleanupClients();
+//     }   
   
     int32_t sample;
     size_t bytes_read;
