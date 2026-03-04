@@ -1,5 +1,3 @@
-#TODO: keeps disconnecting. 
-
 import websocket
 import numpy as np
 import sounddevice as sd

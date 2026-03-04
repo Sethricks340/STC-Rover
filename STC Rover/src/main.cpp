@@ -54,20 +54,8 @@ size_t chunk_index = 0;
 void onAudioWS(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType type,
                void *arg, uint8_t *data, size_t len) {
     if(type == WS_EVT_CONNECT) {
-        // if(activeAudioClient != 0) {
-        //     Serial.println("Closing previous audio client");
-        //     AsyncWebSocketClient* prev = server->client(activeAudioClient);
-        //     if (prev) prev->close();
-        // }
-        // activeAudioClient = client->id();
-        // Serial.printf("Audio client connected: %u\n", activeAudioClient);
-        // Serial.printf("Audio client connected: %u\n", activeAudioClient);
         Serial.printf("Audio client connected: %u\n", client->id());
     } else if(type == WS_EVT_DISCONNECT) {
-        // if(client->id() == activeAudioClient) {
-        //     activeAudioClient = 0;
-        //     Serial.println("Audio client disconnected");
-        // }
         Serial.printf("Audio client connected: %u\n", client->id());
     }
 }
@@ -119,15 +107,6 @@ void onWebSocketEvent(
 ) {
 
     if (type == WS_EVT_CONNECT) {
-
-        // if (activeClientId != 0){
-        //     Serial.printf("Rejecting client %u, already connected to client %u\n"),
-        //         client->id(), activeClientId;
-        //         client->close();
-        //         return;
-        // }
-        // activeClientId = client->id();
-        // Serial.printf("Client connected: %u\n", activeClientId);
         Serial.printf("Client connected: %u\n", client->id());
     }
 
@@ -135,19 +114,11 @@ void onWebSocketEvent(
         Serial.printf("Client disconnected: %u\n", client->id());
         motor_off(0);
         motor_off(1);
-        // if (ws.count() == 0) {
-        //     Serial.println("No clients connected");
-        //     activeClientId = 0;
-        //     motor_off(0);
-        //     motor_off(1);
-        // }
     }
 
     else if (type == WS_EVT_DATA) { // data received
         AwsFrameInfo *info = (AwsFrameInfo*)arg;
         if(info->final && info->len == 5 && info->opcode == WS_BINARY) {
-
-            // if (client->id() != activeClientId) return;
 
             byte opcode       = data[0];
             byte motor_number = data[1];
@@ -167,11 +138,6 @@ void onWebSocketEvent(
             }
         }
     }
-    
-    // else if (type == WS_EVT_PONG) {
-    //     // Client responded to our ping - connection is alive
-    //     Serial.printf("Pong received from client %u\n", client->id()); 
-    // }
 }
 
 void setup() {
@@ -238,13 +204,6 @@ void setup() {
 }
 
 void loop() {
-  // Send ping to all connected clients every 1 second
-//   if (millis() - lastPingTime > PING_INTERVAL) {
-//       lastPingTime = millis();
-//       ws.pingAll();  // Send ping to detect dead connections
-//       ws.cleanupClients();
-//     }   
-  
     int32_t sample;
     size_t bytes_read;
 
@@ -256,20 +215,6 @@ void loop() {
         chunk_index = 0;  // reset hunks 
     }
 
-//   int32_t audio_samples[I2S_BUFFER_SIZE];
-//   size_t bytes_read;
-
-//   i2s_read(I2S_NUM_0, audio_samples, sizeof(audio_samples), &bytes_read, portMAX_DELAY);
-
-  // Serial.write((uint8_t*)audio_samples, bytes_read);
-  // ws.binary(activeClientId, (uint8_t*)audio_samples, bytes_read);
-  // if (activeClientId != 0) {
-  //   ws.binary(activeClientId, (uint8_t*)audio_samples, bytes_read);
-  // }
-//   if(activeAudioClient != 0) {
-//       audio_ws.binary(activeAudioClient, (uint8_t*)audio_samples, bytes_read);
-//   }
-    // audio_ws.binaryAll((uint8_t*)audio_samples, bytes_read);
 }
 
 

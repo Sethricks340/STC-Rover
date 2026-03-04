@@ -14,7 +14,6 @@
 # Put audio connected/disconnected status on GUI
 # Restart audio button
 # If GUI crashes the audio keeps streaming
-# GUI crashes if handheld disconnected (with new scanning logic)
 
 import time
 import serial
