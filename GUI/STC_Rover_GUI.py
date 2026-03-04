@@ -47,10 +47,10 @@ try:
     ip_string = "ws://stc_esp.local:81/ws"  # For home Wifi
     # ip_string = "ws://10.15.44.90:81/ws"   # For byui Wifi
     ws.connect(ip_string)
-    print("WebSocket connection success!")
+    print("Controls WebSocket connected")
     ws_connected = True
 except Exception as e:
-    print("WebSocket connection failed:", e)
+    print("Controls WebSocket connection failed:", e)
     ws_connected = False
     # sys.exit(1) 
 

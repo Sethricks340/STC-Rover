@@ -20,27 +20,29 @@ audio_queue = deque(maxlen=20)
 
 def ws_reader():
     prev_sample = 0
-    ws = websocket.WebSocket()
-    ws.connect(WS_URL)
-    print("WebSocket connected")
-
-    buffer = bytearray()  # accumulate incoming bytes
+    ws = None
+    buffer = bytearray()
 
     while True:
         try:
+            if ws is None:
+                ws = websocket.WebSocket()
+                ws.connect(WS_URL, timeout=1)  # short timeout for faster retries
+                print("Audio WebSocket connected")  # prints every successful connect
+                buffer.clear()
+
             raw = ws.recv()
             if not raw:
                 continue
 
-            buffer.extend(raw)  # add incoming bytes
+            buffer.extend(raw)
 
-            # Process full chunks only
-            while len(buffer) >= CHUNK_SAMPLES * 4:  # 4 bytes per int32
+            while len(buffer) >= CHUNK_SAMPLES * 4:  # process full chunks
                 chunk_bytes = buffer[:CHUNK_SAMPLES*4]
                 buffer = buffer[CHUNK_SAMPLES*4:]
 
                 samples = np.frombuffer(chunk_bytes, dtype=np.int32)
-                samples = samples >> 14  # shift INMP441 data
+                samples = samples >> 14
 
                 filtered = np.zeros_like(samples, dtype=np.float32)
                 filtered[0] = samples[0] - prev_sample
@@ -52,12 +54,16 @@ def ws_reader():
                 audio = np.clip(audio, -1.0, 1.0)
                 audio_queue.append(audio)
 
-        except websocket.WebSocketConnectionClosedException:
-            print("WebSocket closed, reconnecting...")
+        except Exception as e:
+            print(f"Audio WebSocket disconnected: {e}, reconnecting...")
             time.sleep(0.5)
-            ws = websocket.WebSocket()
-            ws.connect(WS_URL)
-
+            try:
+                if ws is not None:
+                    ws.close()
+            except:
+                pass
+            ws = None
+            
 def audio_callback(outdata, frames, time, status):
     if len(audio_queue) > 0:
         chunk = audio_queue.popleft()
@@ -73,6 +79,6 @@ with sd.OutputStream(
     callback=audio_callback,
     blocksize=CHUNK_SAMPLES
 ):
-    print("Streaming WiFi audio (Ctrl+C to stop)")
+    # print("Streaming WiFi audio (Ctrl+C to stop)")
     while True:
         pass
