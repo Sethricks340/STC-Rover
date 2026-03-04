@@ -46,6 +46,11 @@ const unsigned long PING_INTERVAL = 500; // Send ping at 2 Hz
 AsyncWebSocket audio_ws("/audio");  // new endpoint
 // uint32_t activeAudioClient = 0;
 
+#define AUDIO_CHUNK 1024
+
+int32_t audio_chunk[AUDIO_CHUNK];
+size_t chunk_index = 0;
+
 void onAudioWS(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType type,
                void *arg, uint8_t *data, size_t len) {
     if(type == WS_EVT_CONNECT) {
@@ -238,15 +243,23 @@ void loop() {
       lastPingTime = millis();
       ws.pingAll();  // Send ping to detect dead connections
       ws.cleanupClients();
-  }   
+    }   
   
+    int32_t sample;
+    size_t bytes_read;
 
+    i2s_read(I2S_NUM_0, &sample, sizeof(sample), &bytes_read, portMAX_DELAY);
+    audio_chunk[chunk_index++] = sample;
 
+    if (chunk_index >= AUDIO_CHUNK) {
+        audio_ws.binaryAll((uint8_t*)audio_chunk, AUDIO_CHUNK * sizeof(int32_t));
+        chunk_index = 0;  // reset hunks 
+    }
 
-  int32_t audio_samples[I2S_BUFFER_SIZE];
-  size_t bytes_read;
+//   int32_t audio_samples[I2S_BUFFER_SIZE];
+//   size_t bytes_read;
 
-  i2s_read(I2S_NUM_0, audio_samples, sizeof(audio_samples), &bytes_read, portMAX_DELAY);
+//   i2s_read(I2S_NUM_0, audio_samples, sizeof(audio_samples), &bytes_read, portMAX_DELAY);
 
   // Serial.write((uint8_t*)audio_samples, bytes_read);
   // ws.binary(activeClientId, (uint8_t*)audio_samples, bytes_read);
@@ -256,7 +269,7 @@ void loop() {
 //   if(activeAudioClient != 0) {
 //       audio_ws.binary(activeAudioClient, (uint8_t*)audio_samples, bytes_read);
 //   }
-    audio_ws.binaryAll((uint8_t*)audio_samples, bytes_read);
+    // audio_ws.binaryAll((uint8_t*)audio_samples, bytes_read);
 }
 
 

@@ -22,14 +22,16 @@ def ws_reader():
     prev_sample = 0
     ws = None
     buffer = bytearray()
+    backoff = 0.5
 
     while True:
         try:
             if ws is None:
                 ws = websocket.WebSocket()
-                ws.connect(WS_URL, timeout=1)  # short timeout for faster retries
-                print("Audio WebSocket connected")  # prints every successful connect
+                ws.connect(WS_URL, timeout=5)  # longer timeout
+                print("Audio WebSocket connected")
                 buffer.clear()
+                backoff = 0.5
 
             raw = ws.recv()
             if not raw:
@@ -55,14 +57,15 @@ def ws_reader():
                 audio_queue.append(audio)
 
         except Exception as e:
-            print(f"Audio WebSocket disconnected: {e}, reconnecting...")
-            time.sleep(0.5)
+            print(f"Audio WebSocket disconnected: {e}, reconnecting in {backoff}s...")
             try:
                 if ws is not None:
                     ws.close()
             except:
                 pass
             ws = None
+            time.sleep(backoff)
+            backoff = min(10, backoff * 2)  # exponential backoff
             
 def audio_callback(outdata, frames, time, status):
     if len(audio_queue) > 0:
