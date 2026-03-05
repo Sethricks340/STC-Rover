@@ -44,6 +44,13 @@ ws = websocket.WebSocket()
 
 Audio = False
 
+import platform
+
+if platform.system() == "Windows":
+    print("Running on Windows")
+else:
+    print("Running on Linux (Pi)")
+
 try:
     # ip_string = "ws://stc_esp.local:81/ws"  # For home Wifi
     ip_string = "ws://10.15.37.10:81/ws"   # For byui Wifi
@@ -92,21 +99,26 @@ class SerialThread(QThread):
         while True:
             if handeld is None:
                 try:
-                    # import serial.tools.list_ports
-                    # ports = serial.tools.list_ports.comports()
-                    # for port in ports:
-                        # if "USB-SERIAL CH340" in port.description: # Search for handheld
-                        # if "ch340" in port.description.lower() or "nano" in port.description.lower(): # find nano on rp or windows
-                        #     print(f"Found Handheld: {port.device}")
-                        #     handeld = serial.Serial(port.device, 115200, timeout=1)
-                    handeld = serial.Serial('/dev/ttyUSB0', 115200, timeout=1)
-                    self.connection_changed.emit(True)
-
-                except serial.SerialException:
-                    print("Handheld not connected, retrying in 1 second...")
+                    if platform.system() == "Windows":
+                        import serial.tools.list_ports
+                        ports = serial.tools.list_ports.comports()
+                        for port in ports:
+                            if "USB-SERIAL CH340" in port.description:
+                                print(f"Found Handheld: {port.device}")
+                                handeld = serial.Serial(port.device, 115200, timeout=1)
+                                self.connection_changed.emit(True)
+                                break
+                        else:
+                            handeld = None
+                    else:  # Linux/Pi
+                        handeld = serial.Serial('/dev/ttyUSB0', 115200, timeout=1)
+                        self.connection_changed.emit(True)
+                except serial.SerialException as e:
+                    print(f"Handheld not connected: {e}")
+                    handeld = None
                     self.connection_changed.emit(False)
                     self.msleep(1000)
-                    continue  # try again 
+                    continue
             try:
                 line = handeld.readline().decode(errors="ignore").strip()
                 if line.startswith("X:"):
