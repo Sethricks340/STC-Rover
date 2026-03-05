@@ -100,17 +100,17 @@ class SerialThread(QThread):
 
                     #TODO: add os search instead of hardcode
                     # for windows
-                    import serial.tools.list_ports
-                    ports = serial.tools.list_ports.comports()
-                    for port in ports:
-                        if "USB-SERIAL CH340" in port.description: # Search for handheld
-                            print(f"Found Handheld: {port.device}")
-                            handeld = serial.Serial(port.device, 115200, timeout=1)
-                            self.connection_changed.emit(True)
+                    # import serial.tools.list_ports
+                    # ports = serial.tools.list_ports.comports()
+                    # for port in ports:
+                    #     if "USB-SERIAL CH340" in port.description: # Search for handheld
+                    #         print(f"Found Handheld: {port.device}")
+                    #         handeld = serial.Serial(port.device, 115200, timeout=1)
+                    #         self.connection_changed.emit(True)
 
                     # for raspberry pi
-                    # handeld = serial.Serial('/dev/ttyUSB0', 115200, timeout=1)
-                    # self.connection_changed.emit(True)
+                    handeld = serial.Serial('/dev/ttyUSB0', 115200, timeout=1)
+                    self.connection_changed.emit(True)
 
                 except serial.SerialException:
                     print("Handheld not connected, retrying in 1 second...")
