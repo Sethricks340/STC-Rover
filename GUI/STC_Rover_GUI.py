@@ -96,10 +96,11 @@ class SerialThread(QThread):
                     ports = serial.tools.list_ports.comports()
                     for port in ports:
                         # if "USB-SERIAL CH340" in port.description: # Search for handheld
-                        if "ch340" in port.description.lower() or "nano" in port.description.lower(): # find nano on rp or windows
-                            print(f"Found Handheld: {port.device}")
-                            handeld = serial.Serial(port.device, 115200, timeout=1)
-                            self.connection_changed.emit(True)
+                        # if "ch340" in port.description.lower() or "nano" in port.description.lower(): # find nano on rp or windows
+                        #     print(f"Found Handheld: {port.device}")
+                        #     handeld = serial.Serial(port.device, 115200, timeout=1)
+                        #     self.connection_changed.emit(True)
+                        handeld = serial.Serial('/dev/ttyUSB0', 115200, timeout=1)
 
                 except serial.SerialException:
                     print("Handheld not connected, retrying in 1 second...")
