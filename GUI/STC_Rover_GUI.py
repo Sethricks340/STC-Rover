@@ -89,36 +89,36 @@ class SerialThread(QThread):
     data_received = pyqtSignal(float, float, int, int)
     connection_changed = pyqtSignal(bool)
 
-    def run(self):
-        handeld = None
-        x = y = reverse = dime = None
-        zeros_sent = False
-        # self.data_received.emit(0, 0, 0, 0) # Turn off motors if exception triggered
-        while True:
-            if handeld is None:
-                try:
+def run(self):
+    handeld = None
+    x = y = reverse = dime = None
+    zeros_sent = False
 
-                    #TODO: add os search instead of hardcode
-                    # for windows
-                    if os.name == 'nt':
-                        import serial.tools.list_ports
-                        ports = serial.tools.list_ports.comports()
-                        for port in ports:
-                            if "USB-SERIAL CH340" in port.description: # Search for handheld
-                                print(f"Found Handheld: {port.device}")
-                                handeld = serial.Serial(port.device, 115200, timeout=1)
-                                self.connection_changed.emit(True)
+    while True:
+        # Try to connect if not connected
+        if handeld is None:
+            try:
+                if os.name == 'nt':
+                    import serial.tools.list_ports
+                    ports = serial.tools.list_ports.comports()
+                    for port in ports:
+                        if "USB-SERIAL CH340" in port.description:
+                            print(f"Found Handheld: {port.device}")
+                            handeld = serial.Serial(port.device, 115200, timeout=1)
+                            self.connection_changed.emit(True)
+                            zeros_sent = False  # reset
+                elif os.name == 'posix':
+                    handeld = serial.Serial('/dev/ttyUSB0', 115200, timeout=1)
+                    self.connection_changed.emit(True)
+                    zeros_sent = False  # reset
+            except serial.SerialException:
+                print("Handheld not connected, retrying in 1 second...")
+                self.connection_changed.emit(False)
+                self.msleep(1000)
+                continue
 
-                    # for raspberry pi
-                    elif os.name == 'posix':
-                        handeld = serial.Serial('/dev/ttyUSB0', 115200, timeout=1)
-                        self.connection_changed.emit(True)
-
-                except serial.SerialException:
-                    print("Handheld not connected, retrying in 1 second...")
-                    self.connection_changed.emit(False)
-                    self.msleep(1000)
-                    continue  # try again 
+        # Only read if connected
+        if handeld is not None:
             try:
                 line = handeld.readline().decode(errors="ignore").strip()
                 if line.startswith("X:"):
@@ -129,31 +129,24 @@ class SerialThread(QThread):
                     reverse = int(line[2:])
                 elif line.startswith("D:"):
                     dime = int(line[2:])
-                if x is not None and y is not None and reverse is not None and dime is not None:
+                if None not in (x, y, reverse, dime):
                     self.data_received.emit(x, y, reverse, dime)
-                    # print(f"X: {x}, y: {y}, Reverse: {reverse}")
                     x = y = reverse = dime = None
-
-            # except (serial.SerialException, OSError) as e:
-            except Exception as e:
-                # print(f"Handheld disconnected: {e}")
+            except (serial.SerialException, OSError, ValueError) as e:
+                # Connection lost
                 try:
                     handeld.close()
                 except:
-                    pass    
-                if (not zeros_sent): # If any of the values were non-zero, there was a connection
-                    self.data_received.emit(0, 0, 0, 0) # Turn off motors if exception triggered
+                    pass
+                if not zeros_sent:
+                    self.data_received.emit(0, 0, 0, 0)
                     zeros_sent = True
                     print("zeros sent")
                 self.connection_changed.emit(False)
-                handeld = None  # will retry connection on next loop
-                print(f"Handheld not connected, {e} retrying in 1 second...")
-                self.connection_changed.emit(False)
+                handeld = None
+                print(f"Handheld disconnected: {e}, retrying in 1 second...")
                 self.msleep(1000)
-                continue  # try again 
-            except ValueError:
-                continue  # ignore bad lines
-
+                
 # Subclass QMainWindow
 class MainWindow(QMainWindow):
 
