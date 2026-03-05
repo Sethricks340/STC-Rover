@@ -19,10 +19,10 @@ import time
 import serial
 import sys
 import websocket
-from PyQt6.QtGui import QPainter, QBrush, QColor
-from PyQt6.QtCore import Qt, QPoint, pyqtSignal, QThread
+from PyQt5.QtGui import QPainter, QBrush, QColor
+from PyQt5.QtCore import Qt, QPoint, pyqtSignal, QThread
 import math
-from PyQt6.QtWidgets import (
+from PyQt5.QtWidgets import (
     QApplication,
     QCheckBox,
     QMainWindow,
