@@ -91,69 +91,48 @@ class SerialThread(QThread):
     data_received = pyqtSignal(float, float, int, int)
     connection_changed = pyqtSignal(bool)
 
-    def run(self):
-        handeld = None
-        x = y = reverse = dime = None
-        zeros_sent = False
-        # self.data_received.emit(0, 0, 0, 0) # Turn off motors if exception triggered
-        while True:
-            if handeld is None:
-                try:
-                    if platform.system() == "Windows":
-                        import serial.tools.list_ports
-                        ports = serial.tools.list_ports.comports()
-                        for port in ports:
-                            if "USB-SERIAL CH340" in port.description:
-                                print(f"Found Handheld: {port.device}")
-                                handeld = serial.Serial(port.device, 115200, timeout=1)
-                                self.connection_changed.emit(True)
-                                break
-                        else:
-                            handeld = None
-                    else:  # Linux/Pi
+def run(self):
+    handeld = None
+    zeros_sent = False
+    while True:
+        if handeld is None:
+            try:
+                if platform.system() == "Windows":
+                    import serial.tools.list_ports
+                    ports = serial.tools.list_ports.comports()
+                    for port in ports:
+                        if "USB-SERIAL CH340" in port.description:
+                            handeld = serial.Serial(port.device, 115200, timeout=1)
+                            self.connection_changed.emit(True)
+                            break
+                else:  # Linux/Pi
+                    try:
                         handeld = serial.Serial('/dev/ttyUSB0', 115200, timeout=1)
                         self.connection_changed.emit(True)
-                except serial.SerialException as e:
-                    print(f"Handheld not connected: {e}")
-                    handeld = None
-                    self.connection_changed.emit(False)
-                    self.msleep(1000)
-                    continue
-            try:
-                line = handeld.readline().decode(errors="ignore").strip()
-                if line.startswith("X:"):
-                    x = float(line[2:])
-                elif line.startswith("Y:"):
-                    y = float(line[2:])
-                elif line.startswith("R:"):
-                    reverse = int(line[2:])
-                elif line.startswith("D:"):
-                    dime = int(line[2:])
-                if x is not None and y is not None and reverse is not None and dime is not None:
-                    self.data_received.emit(x, y, reverse, dime)
-                    # print(f"X: {x}, y: {y}, Reverse: {reverse}")
-                    x = y = reverse = dime = None
-
-            # except (serial.SerialException, OSError) as e:
-            except Exception as e:
-                # print(f"Handheld disconnected: {e}")
-                try:
-                    handeld.close()
-                except:
-                    pass    
-                if (not zeros_sent): # If any of the values were non-zero, there was a connection
-                    self.data_received.emit(0, 0, 0, 0) # Turn off motors if exception triggered
-                    zeros_sent = True
-                    print("zeros sent")
-                self.connection_changed.emit(False)
-                handeld = None  # will retry connection on next loop
-                print(f"Handheld not connected, {e} retrying in 1 second...")
+                    except serial.SerialException:
+                        handeld = None
+                        self.connection_changed.emit(False)
+                        self.msleep(1000)
+                        continue  # retry
+            except Exception:
+                handeld = None
                 self.connection_changed.emit(False)
                 self.msleep(1000)
-                continue  # try again 
-            except ValueError:
-                continue  # ignore bad lines
+                continue
 
+        if handeld is not None:  # only read if we actually have a serial object
+            try:
+                line = handeld.readline().decode(errors="ignore").strip()
+                # parse line as before
+            except Exception as e:
+                try: handeld.close()
+                except: pass
+                handeld = None
+                self.connection_changed.emit(False)
+                self.data_received.emit(0, 0, 0, 0)  # stop motors
+                self.msleep(1000)
+                continue
+            
 # Subclass QMainWindow
 class MainWindow(QMainWindow):
 
