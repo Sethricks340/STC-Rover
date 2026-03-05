@@ -43,8 +43,8 @@ ws = websocket.WebSocket()
 # ws.settimeout(1)  
 
 try:
-    ip_string = "ws://stc_esp.local:81/ws"  # For home Wifi
-    # ip_string = "ws://10.15.44.90:81/ws"   # For byui Wifi
+    # ip_string = "ws://stc_esp.local:81/ws"  # For home Wifi
+    ip_string = "ws://10.15.44.90:81/ws"   # For byui Wifi
     ws.connect(ip_string)
     print("Controls WebSocket connected")
     ws_connected = True
@@ -93,7 +93,8 @@ class SerialThread(QThread):
                     import serial.tools.list_ports
                     ports = serial.tools.list_ports.comports()
                     for port in ports:
-                        if "USB-SERIAL CH340" in port.description: # Search for handheld
+                        # if "USB-SERIAL CH340" in port.description: # Search for handheld
+                        if "CH340" in port.description or "Nano" in port.description: # find nano on rp or windows
                             print(f"Found Handheld: {port.device}")
                             handeld = serial.Serial(port.device, 115200, timeout=1)
                             self.connection_changed.emit(True)
@@ -225,7 +226,8 @@ class MainWindow(QMainWindow):
             self.audio_process.terminate()
             self.audio_process.wait()
         # start new process
-        audio_script = os.path.join(os.path.dirname(__file__), r"microphone\base_station_audio.py")
+        audio_script = os.path.join(os.path.dirname(__file__), "microphone/base_station_audio.py")  # rp
+        # audio_script = os.path.join(os.path.dirname(__file__), r"microphone\base_station_audio.py") # windows
         self.audio_process = subprocess.Popen([sys.executable, audio_script])
 
     def closeEvent(self, event):
