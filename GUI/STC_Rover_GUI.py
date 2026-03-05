@@ -42,9 +42,11 @@ LEFT_MOTORS = 1
 ws = websocket.WebSocket()
 # ws.settimeout(1)  
 
+Audio = False
+
 try:
     # ip_string = "ws://stc_esp.local:81/ws"  # For home Wifi
-    ip_string = "ws://10.15.44.90:81/ws"   # For byui Wifi
+    ip_string = "ws://10.15.37.10:81/ws"   # For byui Wifi
     ws.connect(ip_string)
     print("Controls WebSocket connected")
     ws_connected = True
@@ -146,7 +148,8 @@ class MainWindow(QMainWindow):
         super().__init__()
 
         self.audio_process = None
-        self.start_audio()
+        if (Audio):
+            self.start_audio()
 
         self.setWindowTitle("STC Rover")
 
@@ -226,13 +229,13 @@ class MainWindow(QMainWindow):
             self.audio_process.terminate()
             self.audio_process.wait()
         # start new process
-        audio_script = os.path.join(os.path.dirname(__file__), "microphone/base_station_audio.py")  # rp
-        # audio_script = os.path.join(os.path.dirname(__file__), r"microphone\base_station_audio.py") # windows
+        # audio_script = os.path.join(os.path.dirname(__file__), "microphone/base_station_audio.py")  # rp
+        audio_script = os.path.join(os.path.dirname(__file__), r"microphone\base_station_audio.py") # windows
         self.audio_process = subprocess.Popen([sys.executable, audio_script])
 
     def closeEvent(self, event):
-        # terminate audio process when GUI closes
         if self.audio_process is not None:
+        # terminate audio process when GUI closes
             self.audio_process.terminate()
             self.audio_process.wait()
         event.accept()  # continue closing the window
