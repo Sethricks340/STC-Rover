@@ -36,6 +36,11 @@ import subprocess
 import sys
 import os
 
+if os.name == 'nt':
+    print("Windows Os ")
+elif os.name == 'posix':
+    print("Linux or macOS")
+
 RIGHT_MOTORS = 0
 LEFT_MOTORS = 1
 
@@ -92,15 +97,20 @@ class SerialThread(QThread):
         while True:
             if handeld is None:
                 try:
-                    # import serial.tools.list_ports
-                    # ports = serial.tools.list_ports.comports()
-                    # for port in ports:
-                        # if "USB-SERIAL CH340" in port.description: # Search for handheld
-                        # if "ch340" in port.description.lower() or "nano" in port.description.lower(): # find nano on rp or windows
-                        #     print(f"Found Handheld: {port.device}")
-                        #     handeld = serial.Serial(port.device, 115200, timeout=1)
-                    handeld = serial.Serial('/dev/ttyUSB0', 115200, timeout=1)
-                    self.connection_changed.emit(True)
+
+                    #TODO: add os search instead of hardcode
+                    # for windows
+                    import serial.tools.list_ports
+                    ports = serial.tools.list_ports.comports()
+                    for port in ports:
+                        if "USB-SERIAL CH340" in port.description: # Search for handheld
+                            print(f"Found Handheld: {port.device}")
+                            handeld = serial.Serial(port.device, 115200, timeout=1)
+                            self.connection_changed.emit(True)
+
+                    # for raspberry pi
+                    # handeld = serial.Serial('/dev/ttyUSB0', 115200, timeout=1)
+                    # self.connection_changed.emit(True)
 
                 except serial.SerialException:
                     print("Handheld not connected, retrying in 1 second...")
