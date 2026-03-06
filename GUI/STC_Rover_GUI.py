@@ -99,7 +99,6 @@ class SerialThread(QThread):
             if handeld is None:
                 try:
 
-                    #TODO: add os search instead of hardcode
                     # for windows
                     if os.name == 'nt':
                         ports = serial.tools.list_ports.comports()
