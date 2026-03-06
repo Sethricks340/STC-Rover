@@ -1,5 +1,4 @@
-// TODO: Scan for available wifi instead of hard coding
-// make ip address persist on public wifi
+// TODO: make ip address persist on public wifi
 
 #include <WiFi.h>
 #include <Arduino.h>
@@ -10,8 +9,12 @@
 // WiFi credentials
 // const char* ssid = "Threat Level Midnight";
 // const char* password = "cowabunga2!!";
-const char* ssid = "BYUI_Visitor";
-const char* password = "";
+// const char* ssid = "BYUI_Visitor";
+// const char* password = "";
+
+const char* wifiSSIDs[] = { "Threat Level Midnight", "BYUI_Visitor" };
+const char* wifiPasswords[] = { "cowabunga2!!", "" };
+const int wifiCount = 2;
 
 // WebSocket server
 AsyncWebServer server(81);
@@ -50,6 +53,26 @@ AsyncWebSocket audio_ws("/audio");  // new endpoint
 
 int32_t audio_chunk[AUDIO_CHUNK];
 size_t chunk_index = 0;
+
+void connectWiFi() {
+  for (int i = 0; i < wifiCount; i++) {
+    Serial.print("Trying WiFi: ");
+    Serial.println(wifiSSIDs[i]);
+    WiFi.begin(wifiSSIDs[i], wifiPasswords[i]);
+    unsigned long start = millis();
+    while (WiFi.status() != WL_CONNECTED && millis() - start < 10000) {
+      delay(500);
+      Serial.print(".");
+    }
+    if (WiFi.status() == WL_CONNECTED) {
+      Serial.print("\nConnected to ");
+      Serial.println(wifiSSIDs[i]);
+      return;
+    }
+    Serial.println("\nFailed, trying next...");
+  }
+  Serial.println("No networks connected.");
+}
 
 void onAudioWS(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType type,
                void *arg, uint8_t *data, size_t len) {
@@ -154,11 +177,12 @@ void setup() {
   pinMode(IN3, OUTPUT);
   pinMode(IN4, OUTPUT);
 
-  WiFi.begin(ssid, password);
-  while (WiFi.status() != WL_CONNECTED) {
-      delay(500);
-      Serial.print(".");
-  }
+//   WiFi.begin(ssid, password);
+//   while (WiFi.status() != WL_CONNECTED) {
+//       delay(500);
+//       Serial.print(".");
+//   }
+    connectWiFi();
 
   // Start mDNS for friendly hostname
   if (MDNS.begin("stc_esp")) {
