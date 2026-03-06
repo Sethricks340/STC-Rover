@@ -1,3 +1,6 @@
+#TODO: add ip discovery
+# If I run just this file, the audio ws doesn't crash. But if I run the other GUI file it does.
+
 import websocket
 import numpy as np
 import sounddevice as sd
