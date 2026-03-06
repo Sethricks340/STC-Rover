@@ -35,6 +35,7 @@ from PyQt5.QtWidgets import (
 import subprocess
 import sys
 import os
+import serial.tools.list_ports
 
 if os.name == 'nt':
     print("Windows OS")
@@ -101,7 +102,6 @@ class SerialThread(QThread):
                     #TODO: add os search instead of hardcode
                     # for windows
                     if os.name == 'nt':
-                        import serial.tools.list_ports
                         ports = serial.tools.list_ports.comports()
                         for port in ports:
                             if "USB-SERIAL CH340" in port.description: # Search for handheld
