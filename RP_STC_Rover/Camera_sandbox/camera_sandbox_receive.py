@@ -47,7 +47,7 @@ AUDIO_RATE = 44100
 AUDIO_CHANNELS = 1
 
 # Select audio output device
-speaker_index = 3  # Replace with index of Jieli device from sd.query_devices()
+speaker_index = 1  # Replace with index of Jieli device from sd.query_devices()
 
 async def receive_camera_audio():
     uri = f"ws://{ROBOT_TAILSCALE_IP}:{PORT}"
