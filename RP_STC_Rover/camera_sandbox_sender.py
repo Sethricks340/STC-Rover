@@ -11,17 +11,22 @@ async def send_camera(websocket, path):
     if not cap.isOpened():
         print("Cannot open camera")
         return
-    while True:
-        ret, frame = cap.read()
-        if not ret:
-            continue
-        _, buffer = cv2.imencode('.jpg', frame)
-        jpg_as_text = base64.b64encode(buffer).decode('utf-8')
-        await websocket.send(jpg_as_text)
+    try:
+        while True:
+            ret, frame = cap.read()
+            if not ret:
+                continue
+            _, buffer = cv2.imencode('.jpg', frame)
+            jpg_as_text = base64.b64encode(buffer).decode('utf-8')
+            await websocket.send(jpg_as_text)
+    except websockets.exceptions.ConnectionClosed:
+        print("Client disconnected")
+    finally:
+        cap.release()
 
 async def main():
     async with websockets.serve(send_camera, "0.0.0.0", PORT):
         print(f"Camera server running on ws://{TAILSCALE_IP}:{PORT}")
-        await asyncio.Future()  # run forever
+        await asyncio.Future()  # keep server running
 
 asyncio.run(main())
