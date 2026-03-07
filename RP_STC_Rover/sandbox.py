@@ -1,6 +1,6 @@
 # TODO:
 # GPIO outputs to motor driver based off of inputs
-    # squeaking at low pwm?
+    # turn off it loose connection?
 # USB Camera/Microphone
 # USB Speaker
 
