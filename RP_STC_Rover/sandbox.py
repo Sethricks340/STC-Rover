@@ -1,3 +1,8 @@
+# TODO:
+# GPIO outputs to motor driver based off of inputs
+# USB Camera/Microphone
+# USB Speaker
+
 import asyncio
 import websockets
 
