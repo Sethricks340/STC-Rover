@@ -1,3 +1,8 @@
+# TODO: 
+# camera is an AV device. Stream this over to the other pi. 
+# note: do this on public wifi, as it might block some of this traffic
+
+
 import cv2
 
 # 0 = first USB camera
