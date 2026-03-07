@@ -12,8 +12,8 @@
 // const char* ssid = "BYUI_Visitor";
 // const char* password = "";
 
-const char* wifiSSIDs[] = { "Threat Level Midnight", "BYUI_Visitor" };
-const char* wifiPasswords[] = { "cowabunga2!!", "" };
+const char* wifiSSIDs[] = { "BYUI_Visitor", "Threat Level Midnight" };
+const char* wifiPasswords[] = { "", "cowabunga2!!" };
 const int wifiCount = 2;
 
 // WebSocket server
@@ -61,7 +61,7 @@ void connectWiFi() {
     WiFi.begin(wifiSSIDs[i], wifiPasswords[i]);
     unsigned long start = millis();
     while (WiFi.status() != WL_CONNECTED && millis() - start < 10000) {
-      delay(500);
+      delay(1000); // Wait time total is 10 seconds
       Serial.print(".");
     }
     if (WiFi.status() == WL_CONNECTED) {
