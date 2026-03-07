@@ -28,6 +28,4 @@ async def receive_camera():
             print("Connection closed, reconnecting in 2 seconds...")
             await asyncio.sleep(2)
 
-    cv2.destroyAllWindows()
-
 asyncio.run(receive_camera())
