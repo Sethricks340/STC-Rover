@@ -7,7 +7,8 @@ TAILSCALE_IP = "100.94.206.108"  # Robot Pi Tailscale IP
 PORT = 8765
 
 # Top-level handler with exactly two arguments
-async def send_camera(websocket, path):
+# async def send_camera(websocket, path):
+async def send_camera(websocket):
     cap = cv2.VideoCapture(0)
     if not cap.isOpened():
         print("Cannot open camera")
