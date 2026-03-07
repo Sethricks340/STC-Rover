@@ -51,8 +51,9 @@ ws = websocket.WebSocket()
 Audio = False
 
 try:
-    ip_string = "ws://stc_esp.local:81/ws"  # For home Wifi
+    # ip_string = "ws://stc_esp.local:81/ws"  # For home Wifi
     # ip_string = "ws://10.15.56.37:81/ws"   # For byui Wifi
+    ip_string = "ws://192.168.0.78:8081/motors"
     ws.connect(ip_string)
     print("Controls WebSocket connected")
     ws_connected = True
