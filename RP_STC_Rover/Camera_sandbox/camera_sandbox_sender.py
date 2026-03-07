@@ -6,8 +6,9 @@ import base64
 TAILSCALE_IP = "100.94.206.108"  # Robot Pi Tailscale IP
 PORT = 8765
 
+# Top-level handler with exactly two arguments
 async def send_camera(websocket, path):
-    cap = cv2.VideoCapture(0)  # USB camera
+    cap = cv2.VideoCapture(0)
     if not cap.isOpened():
         print("Cannot open camera")
         return
@@ -24,9 +25,11 @@ async def send_camera(websocket, path):
     finally:
         cap.release()
 
+# Main server entry
 async def main():
     async with websockets.serve(send_camera, "0.0.0.0", PORT):
         print(f"Camera server running on ws://{TAILSCALE_IP}:{PORT}")
-        await asyncio.Future()  # keep server running
+        await asyncio.Future()  # keep running forever
 
+# Run the server
 asyncio.run(main())
