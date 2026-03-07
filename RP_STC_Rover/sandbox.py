@@ -22,8 +22,8 @@ GPIO.setmode(GPIO.BCM)
 GPIO.setup([IN1,IN2,IN3,IN4], GPIO.OUT)
 GPIO.setup([ENA,ENB], GPIO.OUT)
 
-pwmA = GPIO.PWM(ENA, 5000)
-pwmB = GPIO.PWM(ENB, 5000)
+pwmA = GPIO.PWM(ENA, 20000)
+pwmB = GPIO.PWM(ENB, 20000)
 
 pwmA.start(0)
 pwmB.start(0)
