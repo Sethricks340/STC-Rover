@@ -6,6 +6,8 @@
 
 import asyncio
 import websockets
+import signal
+import sys
 
 import RPi.GPIO as GPIO
 
@@ -38,7 +40,7 @@ async def handler(websocket):
                 print(f"Opcode: {opcode}, Motor: {motor_number}, "
                       f"Power: {power}, PWM: {pwm}, Direction: {direction}")
                 
-                if (pwm < 30):
+                if (pwm < 50):
                     pwmA.ChangeDutyCycle(0)
                     pwmB.ChangeDutyCycle(0)
 
@@ -60,9 +62,22 @@ async def handler(websocket):
     except websockets.exceptions.ConnectionClosed:
         print(f"Client disconnected: {websocket.remote_address}")
 
+def shutdown(signum=None, frame=None):
+    print("Shutting down...")
+    pwmA.stop()
+    pwmB.stop()
+    GPIO.cleanup()
+    sys.exit(0)
+
+signal.signal(signal.SIGINT, shutdown)   # Ctrl+C
+signal.signal(signal.SIGTERM, shutdown)  # kill
+
 async def main():
     async with websockets.serve(handler, "0.0.0.0", 8081):
         print("WebSocket server running on ws://0.0.0.0:8081")
-        await asyncio.Future()  # run forever
+        await asyncio.Future()
 
-asyncio.run(main())
+try:
+    asyncio.run(main())
+finally:
+    shutdown()
