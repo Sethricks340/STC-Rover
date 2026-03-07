@@ -5,7 +5,13 @@ async def handler(websocket):
     print(f"Client connected: {websocket.remote_address}")
     try:
         async for message in websocket:
-            print(f"Received: {message}")
+            # Ensure we have a binary message of length 5
+            if isinstance(message, bytes) and len(message) == 5:
+                opcode, motor_number, power, pwm, direction = message
+                print(f"Opcode: {opcode}, Motor: {motor_number}, "
+                      f"Power: {power}, PWM: {pwm}, Direction: {direction}")
+            else:
+                print(f"Received raw message: {message}")
     except websockets.exceptions.ConnectionClosed:
         print(f"Client disconnected: {websocket.remote_address}")
 
