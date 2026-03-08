@@ -3,6 +3,7 @@
 #   Run on reboot 
 #   Run on full screen on reboot
 #   Closing out GUI (x on tab) causes stall. Ctrl+C works in terminal to close it. 
+#   Crashes if server disconnects? (new issue)
 
 import sys
 import os
@@ -45,13 +46,6 @@ PORT = 8765
 
 AUDIO_RATE = 48000
 AUDIO_CHANNELS = 1
-# speaker_index = 2  # Adjust to your output device
-
-# speaker_index = None
-# for i, dev in enumerate(sd.query_devices()):
-#     if "UACDemo" in dev['name']:
-#         speaker_index = i
-#         break
 
 speaker_index = None
 for i, dev in enumerate(sd.query_devices()):
@@ -187,6 +181,11 @@ class CameraAudioThread(QThread):
                         elif data.startswith("AUD:"):
                             audio_bytes = base64.b64decode(data[4:])
                             audio_array = np.frombuffer(audio_bytes, dtype=np.float32)
+
+                            # apply gain
+                            gain = 2.0  # increase volume (adjust as needed)
+                            audio_array = np.clip(audio_array * gain, -1.0, 1.0)
+
                             audio_stream.write(audio_array)
             except (ConnectionRefusedError, OSError, websockets.exceptions.ConnectionClosed):
                 await asyncio.sleep(2)
