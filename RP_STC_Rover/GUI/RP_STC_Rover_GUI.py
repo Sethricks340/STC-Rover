@@ -45,13 +45,13 @@ PORT = 8765
 
 AUDIO_RATE = 48000
 AUDIO_CHANNELS = 1
-# speaker_index = 1  # Adjust to your output device
+speaker_index = 2  # Adjust to your output device
 
-speaker_index = None
-for i, dev in enumerate(sd.query_devices()):
-    if "UACDemo" in dev['name']:
-        speaker_index = i
-        break
+# speaker_index = None
+# for i, dev in enumerate(sd.query_devices()):
+#     if "UACDemo" in dev['name']:
+#         speaker_index = i
+#         break
 
 
 class ReconnectThread(QThread):
