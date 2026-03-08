@@ -6,7 +6,7 @@ import numpy as np
 import sounddevice as sd
 import time
 
-video_start_time = audio_start_time = time.time()
+# video_start_time = audio_start_time = time.time()
 
 TAILSCALE_IP = "100.94.206.108"  # Sender Pi Tailscale IP
 PORT = 8765
@@ -21,7 +21,7 @@ mic_index = 1  # Replace with index of Logitech C270 mic from sd.query_devices()
 camera_index = 0  # Usually 0 for the first USB camera
 
 async def send_camera_audio(websocket):
-    global video_start_time, audio_start_time
+    # global video_start_time, audio_start_time
     cap = cv2.VideoCapture(camera_index)
     if not cap.isOpened():
         print("Cannot open camera")
@@ -31,11 +31,11 @@ async def send_camera_audio(websocket):
 
     # Audio callback
     def audio_callback(indata, frames, time_info, status):
-        global audio_start_time
+        # global audio_start_time
         audio_queue.put_nowait(indata.copy().tobytes())
-        audio_elapsed_time = time.time() - audio_start_time
-        print(f'Time since last audio send: {audio_elapsed_time} seconds')
-        audio_start_time = time.time()
+        # audio_elapsed_time = time.time() - audio_start_time
+        # print(f'Time since last audio send: {audio_elapsed_time} seconds')
+        # audio_start_time = time.time()
 
     # Start audio input stream (mic)
     stream = sd.InputStream(device=mic_index,
@@ -54,9 +54,9 @@ async def send_camera_audio(websocket):
                 jpg_text = base64.b64encode(buffer).decode('utf-8')
                 await websocket.send(f"VID:{jpg_text}")
 
-                video_elapsed_time = time.time() - video_start_time
-                print(f'Time since last video send: {video_elapsed_time} seconds')
-                video_start_time = time.time()
+                # video_elapsed_time = time.time() - video_start_time
+                # print(f'Time since last video send: {video_elapsed_time} seconds')
+                # video_start_time = time.time()
 
             # Send audio if available
             while not audio_queue.empty():

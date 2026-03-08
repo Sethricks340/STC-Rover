@@ -27,9 +27,9 @@ async def handler(websocket):
             if isinstance(message, bytes) and len(message) == 5:
                 opcode, motor_number, power, pwm, direction = message
 
-                elapsed_time = time.time() - start_time
-                print(f'Time since last motor code: {elapsed_time} seconds')
-                start_time = time.time()
+                # elapsed_time = time.time() - start_time
+                # print(f'Time since last motor code: {elapsed_time} seconds')
+                # start_time = time.time()
 
                 print(f"Opcode: {opcode}, Motor: {motor_number}, Power: {power}, PWM: {pwm}, Direction: {direction}")
                 if pwm < 50:
