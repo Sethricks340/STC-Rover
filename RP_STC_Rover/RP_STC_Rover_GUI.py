@@ -340,90 +340,111 @@
 # ws.close()
 
 
-
-
-from PyQt5.QtWidgets import QApplication, QLabel, QMainWindow, QVBoxLayout, QWidget
-from PyQt5.QtCore import QThread, pyqtSignal
-from PyQt5.QtGui import QImage, QPixmap
-
+import sys
+import os
 import asyncio
 import websockets
 import base64
 import numpy as np
 import sounddevice as sd
-import sys
-import cv2
+from PyQt5.QtWidgets import QApplication, QMainWindow, QWidget, QLabel, QVBoxLayout, QHBoxLayout
+from PyQt5.QtCore import Qt, QThread, pyqtSignal, QTimer
+from PyQt5.QtGui import QPixmap, QImage
 
-ROBOT_TAILSCALE_IP = "100.94.206.108"
+ROBOT_TAILSCALE_IP = "100.94.206.108"  # Sender Pi IP
 PORT = 8765
+
 AUDIO_RATE = 48000
 AUDIO_CHANNELS = 1
-speaker_index = 1  # replace with your audio output index
+speaker_index = 1  # Adjust to your output device
 
-# Thread to handle camera + audio
+# --- Thread to receive camera + audio ---
 class CameraAudioThread(QThread):
-    frame_received = pyqtSignal(QImage)
+    frame_received = pyqtSignal(np.ndarray)
 
     def run(self):
-        asyncio.run(self.camera_audio_loop())
+        asyncio.run(self.websocket_loop())
 
-    async def camera_audio_loop(self):
-        uri = f"ws://{ROBOT_TAILSCALE_IP}:{PORT}"
+    async def websocket_loop(self):
         while True:
             try:
-                async with websockets.connect(uri) as ws:
+                uri = f"ws://{ROBOT_TAILSCALE_IP}:{PORT}"
+                async with websockets.connect(uri) as websocket:
+                    # Start audio stream
                     audio_stream = sd.OutputStream(device=speaker_index,
                                                    samplerate=AUDIO_RATE,
                                                    channels=AUDIO_CHANNELS)
                     audio_stream.start()
+
                     while True:
-                        data = await ws.recv()
+                        data = await websocket.recv()
                         if data.startswith("VID:"):
-                            jpg = base64.b64decode(data[4:])
-                            nparr = np.frombuffer(jpg, np.uint8)
+                            jpg_original = base64.b64decode(data[4:])
+                            nparr = np.frombuffer(jpg_original, np.uint8)
                             frame = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
-                            rgb_image = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-                            h, w, ch = rgb_image.shape
-                            bytes_per_line = ch * w
-                            qt_image = QImage(rgb_image.data, w, h, bytes_per_line, QImage.Format_RGB888)
-                            self.frame_received.emit(qt_image)
+                            self.frame_received.emit(frame)
                         elif data.startswith("AUD:"):
                             audio_bytes = base64.b64decode(data[4:])
                             audio_array = np.frombuffer(audio_bytes, dtype=np.float32)
                             audio_stream.write(audio_array)
-            except Exception as e:
-                print("Camera/audio connection failed:", e)
+            except (ConnectionRefusedError, OSError, websockets.exceptions.ConnectionClosed):
                 await asyncio.sleep(2)
 
-
-# GUI
+# --- GUI ---
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
-        self.setWindowTitle("Camera + Audio GUI")
+        self.setWindowTitle("STC Rover")
 
-        self.camera_label = QLabel("Waiting for camera feed...")
-        self.camera_label.setFixedSize(640, 480)
-        self.camera_label.setStyleSheet("background-color: black; color: white;")
+        # Main layout
+        layout = QHBoxLayout()
+        infos_layout = QVBoxLayout()
 
-        layout = QVBoxLayout()
-        layout.addWidget(self.camera_label)
+        # Camera Feed
+        self.camera_feed_label = QLabel("Camera Feed")
+        self.camera_feed_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.camera_feed_label.setMinimumSize(320, 240)
+        self.camera_feed_label.setStyleSheet("""
+            QLabel {
+                border: 2px solid black;
+                background-color: #000000;
+                font-size: 20px;
+                color: #FFFFFF;
+            }
+        """)
+        layout.addWidget(self.camera_feed_label, stretch=3)
 
+        # Info labels
+        self.handheld_status_label = QLabel("Handheld: Disconnected")
+        self.car_connection_status_label = QLabel("Car Connected: Disconnected")
+        self.GPS_location_label = QLabel("GPS: Placeholder")
+        self.battery_location_label = QLabel("Battery: Placeholder")
+        for lbl in [self.handheld_status_label, self.car_connection_status_label,
+                    self.GPS_location_label, self.battery_location_label]:
+            lbl.setStyleSheet("font-size: 20px;")
+            infos_layout.addWidget(lbl)
+        layout.addLayout(infos_layout, stretch=1)
+
+        # Container
         container = QWidget()
         container.setLayout(layout)
         self.setCentralWidget(container)
 
         # Start camera/audio thread
-        self.camera_thread = CameraAudioThread()
-        self.camera_thread.frame_received.connect(self.update_camera)
-        self.camera_thread.start()
+        self.cam_thread = CameraAudioThread()
+        self.cam_thread.frame_received.connect(self.update_camera)
+        self.cam_thread.start()
 
-    def update_camera(self, qimage):
-        self.camera_label.setPixmap(QPixmap.fromImage(qimage))
+    def update_camera(self, frame):
+        # Convert BGR to RGB
+        rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+        h, w, ch = rgb_frame.shape
+        bytes_per_line = ch * w
+        qimg = QImage(rgb_frame.data, w, h, bytes_per_line, QImage.Format_RGB888)
+        pixmap = QPixmap.fromImage(qimg)
+        self.camera_feed_label.setPixmap(pixmap.scaled(self.camera_feed_label.size(), Qt.AspectRatioMode.KeepAspectRatio))
 
-
-if __name__ == "__main__":
-    app = QApplication(sys.argv)
-    window = MainWindow()
-    window.show()
-    sys.exit(app.exec())
+app = QApplication(sys.argv)
+window = MainWindow()
+window.show()
+app.exec()
