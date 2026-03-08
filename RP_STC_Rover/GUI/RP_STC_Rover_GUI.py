@@ -53,6 +53,16 @@ speaker_index = 2  # Adjust to your output device
 #         speaker_index = i
 #         break
 
+speaker_index = None
+for i, dev in enumerate(sd.query_devices()):
+    if "UACDemoV1.0" in dev['name']:
+        speaker_index = i
+        break
+
+if speaker_index is None:
+    print("USB speaker not found, using default output")
+    speaker_index = sd.default.device[1]  # output device
+
 
 class ReconnectThread(QThread):
     status_update = pyqtSignal(bool)
