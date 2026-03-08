@@ -1,3 +1,8 @@
+# TODO:
+#   Increase sound gain for output speaker
+#   Run on reboot 
+#   Run on full screen on reboot
+
 import sys
 import os
 import cv2  
@@ -346,6 +351,6 @@ class MainWindow(QMainWindow):
 
 app = QApplication(sys.argv)
 window = MainWindow()
-window.show()
+window.showFullScreen()
 app.exec()
 ws.close()
