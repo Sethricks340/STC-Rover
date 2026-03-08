@@ -24,3 +24,36 @@ Opcode: 0, Motor: 0, Power: 1, PWM: 0, Direction: 0
 
 
 
+video (camera_sender.py)
+
+Time since last video send: 0.03896784782409668 seconds
+Time since last video send: 0.043412208557128906 seconds
+Time since last video send: 0.039258480072021484 seconds
+Time since last video send: 0.040283918380737305 seconds
+Time since last video send: 0.04461789131164551 seconds
+Time since last video send: 0.03915977478027344 seconds
+Time since last video send: 0.04387474060058594 seconds
+Time since last video send: 0.04554104804992676 seconds
+Time since last video send: 0.04050111770629883 seconds
+Time since last video send: 0.04104161262512207 seconds
+Time since last video send: 0.04458427429199219 seconds
+Time since last video send: 0.041846275329589844 seconds
+Time since last video send: 0.044111013412475586 seconds
+Time since last video send: 0.0872030258178711 seconds
+Time since last video send: 0.0966944694519043 seconds
+Time since last video send: 0.09148502349853516 seconds
+Time since last video send: 0.08594727516174316 seconds
+Time since last video send: 0.09737324714660645 seconds
+Time since last video send: 0.08711600303649902 seconds
+Time since last video send: 0.10472559928894043 seconds
+Time since last video send: 0.09050798416137695 seconds
+Time since last video send: 0.10726141929626465 seconds
+Time since last video send: 0.10071897506713867 seconds
+Time since last video send: 0.09188985824584961 seconds
+Time since last video send: 0.09963011741638184 seconds
+Time since last video send: 0.08756208419799805 seconds
+Time since last video send: 0.08766937255859375 seconds
+Time since last video send: 0.10546708106994629 seconds
+Time since last video send: 0.08697175979614258 seconds
+Time since last video send: 0.10074114799499512 seconds
+Time since last video send: 0.08339309692382812 seconds

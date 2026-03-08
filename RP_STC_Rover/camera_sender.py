@@ -32,6 +32,9 @@ async def send_camera_audio(websocket):
     # Audio callback
     def audio_callback(indata, frames, time, status):
         audio_queue.put_nowait(indata.copy().tobytes())
+        audio_elapsed_time = time.time() - audio_start_time
+        print(f'Time since last audio send: {audio_elapsed_time} seconds')
+        audio_start_time = time.time()
 
     # Start audio input stream (mic)
     stream = sd.InputStream(device=mic_index,
