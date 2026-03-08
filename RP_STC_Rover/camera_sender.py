@@ -21,6 +21,7 @@ mic_index = 1  # Replace with index of Logitech C270 mic from sd.query_devices()
 camera_index = 0  # Usually 0 for the first USB camera
 
 async def send_camera_audio(websocket):
+    global video_start_time, audio_start_time
     cap = cv2.VideoCapture(camera_index)
     if not cap.isOpened():
         print("Cannot open camera")
