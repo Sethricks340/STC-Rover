@@ -3,6 +3,9 @@ import websockets
 import signal
 import sys
 import RPi.GPIO as GPIO
+import time
+
+start_time = time.time()
 
 IN1, IN2, IN3, IN4 = 23, 24, 27, 22
 ENA, ENB = 18, 19
@@ -22,6 +25,11 @@ async def handler(websocket):
         async for message in websocket:
             if isinstance(message, bytes) and len(message) == 5:
                 opcode, motor_number, power, pwm, direction = message
+
+                elapsed_time = time.time() - start_time
+                print(f'Time since last motor code: {elapsed_time} seconds')
+                start_time = time.time()
+
                 print(f"Opcode: {opcode}, Motor: {motor_number}, Power: {power}, PWM: {pwm}, Direction: {direction}")
                 if pwm < 50:
                     pwmA.ChangeDutyCycle(0)
