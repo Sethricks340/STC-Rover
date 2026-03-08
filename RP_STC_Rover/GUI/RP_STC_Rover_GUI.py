@@ -22,6 +22,8 @@ from PyQt5.QtWidgets import QApplication, QMainWindow, QWidget, QLabel, QVBoxLay
 from PyQt5.QtCore import Qt, QThread, pyqtSignal, QTimer, QPoint
 from PyQt5.QtGui import QPixmap, QImage, QPainter, QBrush, QColor
 
+start_time = time.time()
+
 if os.name == 'nt':
     print("Windows OS")
 elif os.name == 'posix':

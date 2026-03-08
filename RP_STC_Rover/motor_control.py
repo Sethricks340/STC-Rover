@@ -20,6 +20,7 @@ pwmA.start(0)
 pwmB.start(0)
 
 async def handler(websocket):
+    global start_time
     print(f"Client connected: {websocket.remote_address}")
     try:
         async for message in websocket:
