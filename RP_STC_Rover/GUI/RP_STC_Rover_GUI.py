@@ -182,8 +182,7 @@ class CameraAudioThread(QThread):
                             audio_bytes = base64.b64decode(data[4:])
                             audio_array = np.frombuffer(audio_bytes, dtype=np.float32)
 
-                            # apply gain
-                            gain = 2.0  # increase volume (adjust as needed)
+                            gain = 3.0  
                             audio_array = np.clip(audio_array * gain, -1.0, 1.0)
 
                             audio_stream.write(audio_array)
