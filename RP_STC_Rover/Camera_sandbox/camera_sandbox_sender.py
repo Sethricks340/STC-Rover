@@ -48,12 +48,12 @@ TAILSCALE_IP = "100.94.206.108"  # Sender Pi Tailscale IP
 PORT = 8765
 
 # Audio settings
-AUDIO_RATE = 44100
+AUDIO_RATE = 48000
 AUDIO_CHANNELS = 1
 AUDIO_BLOCKSIZE = 1024
 
 # Select devices
-mic_index = 2  # Replace with index of Logitech C270 mic from sd.query_devices()
+mic_index = 1  # Replace with index of Logitech C270 mic from sd.query_devices()
 camera_index = 0  # Usually 0 for the first USB camera
 
 async def send_camera_audio(websocket):

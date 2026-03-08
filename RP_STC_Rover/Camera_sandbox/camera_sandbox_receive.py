@@ -43,7 +43,7 @@ import sounddevice as sd
 ROBOT_TAILSCALE_IP = "100.94.206.108"  # Sender Pi IP
 PORT = 8765
 
-AUDIO_RATE = 44100
+AUDIO_RATE = 48000
 AUDIO_CHANNELS = 1
 
 # Select audio output device
