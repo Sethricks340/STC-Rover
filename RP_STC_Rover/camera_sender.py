@@ -30,7 +30,8 @@ async def send_camera_audio(websocket):
     audio_queue = asyncio.Queue()
 
     # Audio callback
-    def audio_callback(indata, frames, time, status):
+    def audio_callback(indata, frames, time_info, status):
+        global audio_start_time
         audio_queue.put_nowait(indata.copy().tobytes())
         audio_elapsed_time = time.time() - audio_start_time
         print(f'Time since last audio send: {audio_elapsed_time} seconds')
