@@ -342,6 +342,7 @@
 
 import sys
 import os
+import cv2  
 import asyncio
 import websockets
 import base64
