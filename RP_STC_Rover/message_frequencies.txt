@@ -1,0 +1,26 @@
+(motor_contro.py)
+
+Time since last motor code: 0.00010752677917480469 seconds
+Opcode: 0, Motor: 1, Power: 1, PWM: 0, Direction: 1
+Time since last motor code: 0.04828786849975586 seconds
+Opcode: 0, Motor: 0, Power: 1, PWM: 0, Direction: 0
+Time since last motor code: 0.0019757747650146484 seconds
+Opcode: 0, Motor: 1, Power: 1, PWM: 0, Direction: 1
+Time since last motor code: 0.047708749771118164 seconds
+Opcode: 0, Motor: 0, Power: 1, PWM: 0, Direction: 0
+Time since last motor code: 0.00022530555725097656 seconds
+Opcode: 0, Motor: 1, Power: 1, PWM: 0, Direction: 1
+Time since last motor code: 0.05059504508972168 seconds
+Opcode: 0, Motor: 0, Power: 1, PWM: 0, Direction: 0
+Time since last motor code: 0.00034117698669433594 seconds
+Opcode: 0, Motor: 1, Power: 1, PWM: 0, Direction: 1
+Time since last motor code: 0.0589444637298584 seconds
+Opcode: 0, Motor: 0, Power: 1, PWM: 0, Direction: 0
+Time since last motor code: 0.00030159950256347656 seconds
+Opcode: 0, Motor: 1, Power: 1, PWM: 0, Direction: 1
+Time since last motor code: 0.04131674766540527 seconds
+Opcode: 0, Motor: 0, Power: 1, PWM: 0, Direction: 0
+
+
+
+

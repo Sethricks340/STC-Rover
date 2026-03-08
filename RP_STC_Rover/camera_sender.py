@@ -4,6 +4,9 @@ import websockets
 import base64
 import numpy as np
 import sounddevice as sd
+import time
+
+video_start_time = audio_start_time = time.time()
 
 TAILSCALE_IP = "100.94.206.108"  # Sender Pi Tailscale IP
 PORT = 8765
@@ -45,6 +48,10 @@ async def send_camera_audio(websocket):
                 _, buffer = cv2.imencode('.jpg', frame)
                 jpg_text = base64.b64encode(buffer).decode('utf-8')
                 await websocket.send(f"VID:{jpg_text}")
+
+                video_elapsed_time = time.time() - video_start_time
+                print(f'Time since last video send: {video_elapsed_time} seconds')
+                video_start_time = time.time()
 
             # Send audio if available
             while not audio_queue.empty():
