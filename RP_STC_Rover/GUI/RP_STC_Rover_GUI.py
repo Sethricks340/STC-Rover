@@ -1,9 +1,11 @@
 # TODO:
-#   Increase sound gain for output speaker
-#   Run on reboot 
-#   Run on full screen on reboot
+#   Help camera lag? (maybe slow down audio rate)
 #   Closing out GUI (x on tab) causes stall. Ctrl+C works in terminal to close it. 
 #   Crashes if server disconnects? (new issue)
+#   Run GUI on reboot
+
+# Add microphone on controls
+# Add speaker on car
 
 import sys
 import os
