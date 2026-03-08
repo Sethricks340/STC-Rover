@@ -86,10 +86,14 @@ async def send_camera_audio(websocket):
                 await websocket.send(f"VID:{jpg_text}")
 
             # Send audio if available
+            # while not audio_queue.empty():
+            #     audio_bytes = await audio_queue.get()
+            #     audio_text = base64.b64encode(audio_bytes).decode('utf-8')
+            #     await websocket.send(f"AUD:{audio_text}")
             while not audio_queue.empty():
                 audio_bytes = await audio_queue.get()
-                audio_text = base64.b64encode(audio_bytes).decode('utf-8')
-                await websocket.send(f"AUD:{audio_text}")
+                # Send raw bytes directly as binary
+                await websocket.send(audio_bytes)
 
             await asyncio.sleep(0.01)
     except websockets.exceptions.ConnectionClosed:

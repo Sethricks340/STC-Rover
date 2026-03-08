@@ -71,10 +71,14 @@ async def receive_camera_audio():
                         cv2.imshow("Robot Camera", frame)
                         if cv2.waitKey(1) & 0xFF == ord('q'):
                             return
-                    elif data.startswith("AUD:"):
-                        audio_bytes = base64.b64decode(data[4:])
-                        audio_array = np.frombuffer(audio_bytes, dtype=np.float32)
-                        audio_stream.write(audio_array)
+                    # elif data.startswith("AUD:"):
+                    #     audio_bytes = base64.b64decode(data[4:])
+                    #     audio_array = np.frombuffer(audio_bytes, dtype=np.float32)
+                    #     audio_stream.write(audio_array)
+                    # Assume everything received here is raw audio bytes
+                    audio_bytes = await websocket.recv()
+                    audio_array = np.frombuffer(audio_bytes, dtype=np.float32)
+                    audio_stream.write(audio_array)
         except (ConnectionRefusedError, OSError):
             print("Server not available, retrying in 2s...")
             await asyncio.sleep(2)
