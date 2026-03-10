@@ -3,6 +3,7 @@
 #   Closing out GUI (x on tab) causes stall. Ctrl+C works in terminal to close it. 
 #   Crashes if server disconnects? (new issue)
 #   Run GUI on reboot
+#   Disconnects randomly (if happens need to make motors stop)
 
 # Add microphone on controls
 # Add speaker on car
@@ -29,8 +30,11 @@ if os.name == 'nt':
 elif os.name == 'posix':
     print("Linux or macOS")
 
-RIGHT_MOTORS = 0
-LEFT_MOTORS = 1
+# RIGHT_MOTORS = 0
+# LEFT_MOTORS = 1
+RIGHT_MOTORS = 1
+LEFT_MOTORS = 0
+
 
 ws = websocket.WebSocket()
 
