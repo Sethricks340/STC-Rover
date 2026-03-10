@@ -342,8 +342,10 @@ class MainWindow(QMainWindow):
         self.smoothed_turn += alpha * (turn - self.smoothed_turn)
 
         # soft reverse logic
+        # current_direction = 0 if self.smoothed_y >= 0 else 1
+        # right_direction = 1 - current_direction   # invert only right side, switched on car
         current_direction = 0 if self.smoothed_y >= 0 else 1
-        right_direction = 1 - current_direction   # invert only right side, switched on car
+        right_direction = current_direction
 
         turn_strength = min(1.0, abs(self.smoothed_turn))
 
