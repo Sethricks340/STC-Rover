@@ -4,6 +4,9 @@
 #   Crashes if server disconnects? (new issue)
 #   Run GUI on reboot
 #   Disconnects randomly (if happens need to make motors stop)
+#   Why are the motor controls so weird right now?
+    # |-> with the same commands, move different speeds. Particularly dime turn. 245 was way faster than I wanted then suddenly it wasn't enough to even turn. (hardware issue?)
+    # |-> turning in general now seems weird. It will randomly accelerate when it should stay steady. 
 
 # Add microphone on controls
 # Add speaker on car
