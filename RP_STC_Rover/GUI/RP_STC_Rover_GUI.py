@@ -356,8 +356,8 @@ class MainWindow(QMainWindow):
         if turn_strength > 0.7: cut = 0
         else: cut = int(base * (1 - turn_strength)) # inside wheel turning
 
-        current_direction = 0 if self.smoothed_y >= 0 else 1
-        right_direction = 1 - current_direction # invert only right side, switched on car
+        # current_direction = 0 if self.smoothed_y >= 0 else 1
+        # right_direction = 1 - current_direction # invert only right side, switched on car
 
         if self.smoothed_turn > 0.1:  # turn right
             self.send(LEFT_MOTORS,  min(255, base + boost), current_direction)
