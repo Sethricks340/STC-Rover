@@ -334,8 +334,8 @@ class MainWindow(QMainWindow):
         if (dime):
             # self.send(RIGHT_MOTORS, 200, 1) # right motors reversed on car
             # self.send(LEFT_MOTORS, 200, 0)
-            self.send(RIGHT_MOTORS, 255, 1) # right motors reversed on car
-            self.send(LEFT_MOTORS, 255, 0)
+            self.send(RIGHT_MOTORS, 240, 1) # right motors reversed on car
+            self.send(LEFT_MOTORS, 240, 0)
             self.smoothed_y = 0  #reset speed smoothing
             return
 
