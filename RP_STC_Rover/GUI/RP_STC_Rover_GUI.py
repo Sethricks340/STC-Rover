@@ -332,8 +332,10 @@ class MainWindow(QMainWindow):
 
         # turn on a dime, left and right motors going opposite directions
         if (dime):
-            self.send(RIGHT_MOTORS, 200, 1) # right motors reversed on car
-            self.send(LEFT_MOTORS, 200, 0)
+            # self.send(RIGHT_MOTORS, 200, 1) # right motors reversed on car
+            # self.send(LEFT_MOTORS, 200, 0)
+            self.send(RIGHT_MOTORS, 255, 1) # right motors reversed on car
+            self.send(LEFT_MOTORS, 255, 0)
             self.smoothed_y = 0  #reset speed smoothing
             return
 
