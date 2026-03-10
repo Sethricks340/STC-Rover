@@ -314,7 +314,7 @@ class MainWindow(QMainWindow):
     def send(self, motor, y, reverse):
         global ws_connected, ws
         binary_msg = bytes([self.motor_opcode, motor, 1, y, reverse])
-        print(binary_msg)
+        # print(binary_msg)
         if not ws_connected:
             return
 
@@ -332,7 +332,7 @@ class MainWindow(QMainWindow):
 
         # turn on a dime, left and right motors going opposite directions
         if (dime):
-            self.send(RIGHT_MOTORS, 200, 0) # right motors reversed on car
+            self.send(RIGHT_MOTORS, 200, 1) # right motors reversed on car
             self.send(LEFT_MOTORS, 200, 0)
             self.smoothed_y = 0  #reset speed smoothing
             return
