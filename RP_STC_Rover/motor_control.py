@@ -33,16 +33,20 @@ async def handler(websocket):
 
                 print(f"Opcode: {opcode}, Motor: {motor_number}, Power: {power}, PWM: {pwm}, Direction: {direction}")
                 if pwm < 50:
-                    pwmA.ChangeDutyCycle(0)
-                    pwmB.ChangeDutyCycle(0)
+                    if not motor_number:
+                        pwmA.ChangeDutyCycle(0)
+                    else:
+                        pwmB.ChangeDutyCycle(0)
                 else:
-                    GPIO.output(IN1, GPIO.LOW if direction else GPIO.HIGH)
-                    GPIO.output(IN2, GPIO.HIGH if direction else GPIO.LOW)
-                    GPIO.output(IN3, GPIO.HIGH if direction else GPIO.LOW)
-                    GPIO.output(IN4, GPIO.LOW if direction else GPIO.HIGH)
                     duty = pwm * 100 / 255
-                    pwmA.ChangeDutyCycle(duty)
-                    pwmB.ChangeDutyCycle(duty)
+                    if not motor_number:
+                        GPIO.output(IN1, GPIO.LOW if direction else GPIO.HIGH)
+                        GPIO.output(IN2, GPIO.HIGH if direction else GPIO.LOW)
+                        pwmA.ChangeDutyCycle(duty)
+                    else:
+                        GPIO.output(IN3, GPIO.HIGH if direction else GPIO.LOW)
+                        GPIO.output(IN4, GPIO.LOW if direction else GPIO.HIGH)
+                        pwmB.ChangeDutyCycle(duty)
             else:
                 print(f"Received raw message: {message}")
     except websockets.exceptions.ConnectionClosed:
