@@ -314,6 +314,7 @@ class MainWindow(QMainWindow):
     def send(self, motor, y, reverse):
         global ws_connected, ws
         binary_msg = bytes([self.motor_opcode, motor, 1, y, reverse])
+        print(binary_msg)
         if not ws_connected:
             return
 
