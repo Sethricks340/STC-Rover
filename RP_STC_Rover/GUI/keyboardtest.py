@@ -5,11 +5,13 @@
 from pynput.keyboard import Key, Listener
 
 direction = "off"
-speed = 1
+speed_index = 0
+speeds = [100, 200, 255]
+speed = 100
 spin = "CW"
 
 def on_press(key):
-    global direction, spin, speed
+    global direction, spin, speed, speed_index
 
     if key == Key.up:
         direction = "forward"
@@ -24,7 +26,7 @@ def on_press(key):
         print(direction)
 
 def on_release(key):
-    global direction, spin, speed
+    global direction, spin, speed, speed_index
     if key == Key.esc:
         return False
     
@@ -33,7 +35,8 @@ def on_release(key):
         print("spin:", spin)
 
     elif hasattr(key, 'char') and key.char == 'g':
-        speed = 1 if speed == 3 else speed + 1
+        speed_index = 0 if speed_index == 2 else speed_index + 1
+        speed = speeds[speed_index]
         print("speed:", speed)
 
     elif key in (Key.up, Key.down):
