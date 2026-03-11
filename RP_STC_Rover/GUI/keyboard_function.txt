@@ -1,0 +1,11 @@
+up arrow:       forward
+down arrow:     backwards
+d:              spin on dime
+s:              change spin direction
+g:              change gear speed
+
+Pressing up/down/d overwrites current direction, even if another key is pressed. 
+    example: hold forward, goes forward. Press backwards while holding forward, goes backwards. 
+
+Gear changes speed from 1, 2, 3. Wrap around. Controls motor speed. 
+S will change the direction of the spinning motion.

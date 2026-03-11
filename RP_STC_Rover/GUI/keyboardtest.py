@@ -6,8 +6,8 @@ from pynput.keyboard import Key, Listener
 
 # CW, CCW, Forward, Backwards
 direction = "off"
-# 0, 1, 2
-speed = 0
+# 1, 2, 3
+speed = 1
 # clockwise, counter-clockwise
 spin = "CW"
 
@@ -25,7 +25,7 @@ def on_press(key):
     elif hasattr(key, 'char') and key.char == 's':
         spin = "CCW" if (spin == "CW") else "CCW"
     elif hasattr(key, 'char') and key.char == 'g':
-        speed = 0 if (speed == 3) else speed + 1
+        speed = 1 if (speed == 3) else speed + 1
 
 def on_release(key):
     print('{0} release'.format(key))
