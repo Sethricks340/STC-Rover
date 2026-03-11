@@ -22,6 +22,14 @@ from PyQt5.QtWidgets import QApplication, QMainWindow, QWidget, QLabel, QVBoxLay
 from PyQt5.QtCore import Qt, QThread, pyqtSignal, QTimer, QPoint
 from PyQt5.QtGui import QPixmap, QImage, QPainter, QBrush, QColor
 
+from pynput.keyboard import Key, Listener
+
+direction = "off"
+speed_index = 0
+speeds = [100, 200, 255]
+speed = 100
+spin = "CW"
+
 start_time = time.time()
 
 if os.name == 'nt':
@@ -97,68 +105,125 @@ class SerialThread(QThread):
     connection_changed = pyqtSignal(bool)
 
     def run(self):
-        handeld = None
-        x = y = reverse = dime = None
-        zeros_sent = False
-        # self.data_received.emit(0, 0, 0, 0) # Turn off motors if exception triggered
-        while True:
-            if handeld is None:
-                try:
 
-                    # for windows
-                    if os.name == 'nt':
-                        pass
-                        # ports = serial.tools.list_ports.comports()
-                        # for port in ports:
-                        #     if "USB-SERIAL CH340" in port.description: # Search for handheld
-                        #         print(f"Found Handheld: {port.device}")
-                        #         handeld = serial.Serial(port.device, 115200, timeout=1)
-                        #         self.connection_changed.emit(True)
+        def on_press(key):
+            global direction, spin, speed, speed_index
 
-                    # for raspberry pi
-                    elif os.name == 'posix':
-                        handeld = serial.Serial('/dev/ttyUSB0', 115200, timeout=1)
-                        self.connection_changed.emit(True)
+            if key == Key.up:
+                direction = "forward"
+                print(direction)
 
-                except serial.SerialException:
-                    print("Handheld not connected, retrying in 1 second...")
-                    self.connection_changed.emit(False)
-                    self.msleep(1000)
-                    continue  # try again 
-            try:
-                line = handeld.readline().decode(errors="ignore").strip()
-                if line.startswith("X:"):
-                    x = float(line[2:])
-                elif line.startswith("Y:"):
-                    y = float(line[2:])
-                elif line.startswith("R:"): 
-                    reverse = int(line[2:])
-                elif line.startswith("D:"):
-                    dime = int(line[2:])
-                if x is not None and y is not None and reverse is not None and dime is not None:
-                    self.data_received.emit(x, y, reverse, dime)
-                    # print(f"X: {x}, y: {y}, Reverse: {reverse}")
-                    x = y = reverse = dime = None
+            elif key == Key.down:
+                direction = "backwards"
+                print(direction)
 
-            # except (serial.SerialException, OSError) as e:
-            except Exception as e:
-                # print(f"Handheld disconnected: {e}")
-                try:
-                    handeld.close()
-                except:
-                    pass    
-                if (not zeros_sent): # If any of the values were non-zero, there was a connection
-                    self.data_received.emit(0, 0, 0, 0) # Turn off motors if exception triggered
-                    zeros_sent = True
-                    print("zeros sent")
-                self.connection_changed.emit(False)
-                handeld = None  # will retry connection on next loop
-                print(f"Handheld not connected, {e} retrying in 1 second...")
-                self.connection_changed.emit(False)
-                self.msleep(1000)
-                continue  # try again 
-            except ValueError:
-                continue  # ignore bad lines
+            elif hasattr(key, 'char') and key.char == 'd':
+                direction = spin
+                print(direction)
+
+        def on_release(key):
+            global direction, spin, speed, speed_index
+            # if key == Key.esc:
+            #     # sys.exit()
+            #     return False
+            
+            if hasattr(key, 'char') and key.char == 's':
+                spin = "CCW" if spin == "CW" else "CW"
+                print("spin:", spin)
+
+            elif hasattr(key, 'char') and key.char == 'g':
+                speed_index = 0 if speed_index == 2 else speed_index + 1
+                speed = speeds[speed_index]
+                print("speed:", speed)
+
+            elif key in (Key.up, Key.down):
+                direction = "off"
+                print(direction)
+                self.data_received.emit(0, 0, 0, 0)
+
+            elif hasattr(key, 'char') and key.char == 'd':
+                direction = "off"
+                print(direction)
+                self.data_received.emit(0, 0, 0, 0)
+
+        with Listener(on_press=on_press, on_release=on_release) as listener:
+            listener.join()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        # handeld = None
+        # x = y = reverse = dime = None
+        # zeros_sent = False
+        # # self.data_received.emit(0, 0, 0, 0) # Turn off motors if exception triggered
+        # while True:
+        #     if handeld is None:
+        #         try:
+
+        #             # for windows
+        #             if os.name == 'nt':
+        #                 pass
+        #                 # ports = serial.tools.list_ports.comports()
+        #                 # for port in ports:
+        #                 #     if "USB-SERIAL CH340" in port.description: # Search for handheld
+        #                 #         print(f"Found Handheld: {port.device}")
+        #                 #         handeld = serial.Serial(port.device, 115200, timeout=1)
+        #                 #         self.connection_changed.emit(True)
+
+        #             # for raspberry pi
+        #             elif os.name == 'posix':
+        #                 handeld = serial.Serial('/dev/ttyUSB0', 115200, timeout=1)
+        #                 self.connection_changed.emit(True)
+
+        #         except serial.SerialException:
+        #             print("Handheld not connected, retrying in 1 second...")
+        #             self.connection_changed.emit(False)
+        #             self.msleep(1000)
+        #             continue  # try again 
+        #     try:
+        #         line = handeld.readline().decode(errors="ignore").strip()
+        #         if line.startswith("X:"):
+        #             x = float(line[2:])
+        #         elif line.startswith("Y:"):
+        #             y = float(line[2:])
+        #         elif line.startswith("R:"): 
+        #             reverse = int(line[2:])
+        #         elif line.startswith("D:"):
+        #             dime = int(line[2:])
+        #         if x is not None and y is not None and reverse is not None and dime is not None:
+        #             self.data_received.emit(x, y, reverse, dime)
+        # #             # print(f"X: {x}, y: {y}, Reverse: {reverse}")
+        # #             x = y = reverse = dime = None
+
+        #     # except (serial.SerialException, OSError) as e:
+        #     except Exception as e:
+        #         # print(f"Handheld disconnected: {e}")
+        #         try:
+        #             handeld.close()
+        #         except:
+        #             pass    
+        #         if (not zeros_sent): # If any of the values were non-zero, there was a connection
+        #             self.data_received.emit(0, 0, 0, 0) # Turn off motors if exception triggered
+        #             zeros_sent = True
+        #             print("zeros sent")
+        #         self.connection_changed.emit(False)
+        #         handeld = None  # will retry connection on next loop
+        #         print(f"Handheld not connected, {e} retrying in 1 second...")
+        #         self.connection_changed.emit(False)
+        #         self.msleep(1000)
+        #         continue  # try again 
+        #     except ValueError:
+        #         continue  # ignore bad lines
 
 
 
