@@ -1,11 +1,9 @@
 # TODO:
-#   Help camera lag? (maybe slow down audio rate)
+#   Camera lag when motor code running
 #   Closing out GUI (x on tab) causes stall. Ctrl+C works in terminal to close it. 
 #   Crashes if server disconnects? (new issue)
-#   Run GUI on reboot
-#   Only send motor message when command changes! (will probably stop lots of crashes)
+#   Test on public / different wifi
 
-# Add microphone on controls
 # Add speaker on car
 
 import sys
