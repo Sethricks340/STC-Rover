@@ -101,6 +101,8 @@ class ReconnectThread(QThread):
 
 
 class SerialThread(QThread):
+    # print(f"Opcode: {opcode}, Motor: {motor_number}, Power: {power}, PWM: {pwm}, Direction: {direction}")
+    # self.data_received.emit(x, y, reverse, dime)
     data_received = pyqtSignal(float, float, int, int)
     connection_changed = pyqtSignal(bool)
 
@@ -112,10 +114,12 @@ class SerialThread(QThread):
             if key == Key.up:
                 direction = "forward"
                 print(direction)
+                self.data_received.emit(0, speed, 0, 0)
 
             elif key == Key.down:
                 direction = "backwards"
                 print(direction)
+                self.data_received.emit(0, speed, 1, 0)
 
             elif hasattr(key, 'char') and key.char == 'd':
                 direction = spin
@@ -398,45 +402,49 @@ class MainWindow(QMainWindow):
     def control_data(self, turn, y, reverse, dime):
         if not ws_connected:
             return  # skip everything if ESP is disconnected
+        
+        self.send(RIGHT_MOTORS, int(y), reverse)
+        self.send(LEFT_MOTORS, int(y), reverse)
 
-        # turn on a dime, left and right motors going opposite directions
-        if (dime):
-            self.send(RIGHT_MOTORS, 200, 0) # right motors reversed on car
-            self.send(LEFT_MOTORS, 200, 0)
-            self.smoothed_y = 0  #reset speed smoothing
-            return
 
-        alpha = 0.1  # smoothing factor
-        self.smoothed_y += alpha * (y - self.smoothed_y)
-        self.smoothed_turn += alpha * (turn - self.smoothed_turn)
+        # # turn on a dime, left and right motors going opposite directions
+        # if (dime):
+        #     self.send(RIGHT_MOTORS, 200, 0) # right motors reversed on car
+        #     self.send(LEFT_MOTORS, 200, 0)
+        #     self.smoothed_y = 0  #reset speed smoothing
+        #     return
 
-        # soft reverse logic
-        current_direction = 0 if self.smoothed_y >= 0 else 1
-        right_direction = 1 - current_direction   # invert only right side, switched on car
+        # alpha = 0.1  # smoothing factor
+        # self.smoothed_y += alpha * (y - self.smoothed_y)
+        # self.smoothed_turn += alpha * (turn - self.smoothed_turn)
 
-        turn_strength = min(1.0, abs(self.smoothed_turn))
+        # # soft reverse logic
+        # current_direction = 0 if self.smoothed_y >= 0 else 1
+        # right_direction = 1 - current_direction   # invert only right side, switched on car
 
-        base = int(abs(self.smoothed_y) * 255)  # Max speeds
-        # base = int(abs(self.smoothed_y) * 255 / 2)  # Halfed speeds (doesn't work as well)
-        boost = int(base * turn_strength) # outside wheel turning
+        # turn_strength = min(1.0, abs(self.smoothed_turn))
 
-        if turn_strength > 0.7: cut = 0
-        else: cut = int(base * (1 - turn_strength)) # inside wheel turning
+        # base = int(abs(self.smoothed_y) * 255)  # Max speeds
+        # # base = int(abs(self.smoothed_y) * 255 / 2)  # Halfed speeds (doesn't work as well)
+        # boost = int(base * turn_strength) # outside wheel turning
 
-        current_direction = 0 if self.smoothed_y >= 0 else 1
-        right_direction = 1 - current_direction # invert only right side, switched on car
+        # if turn_strength > 0.7: cut = 0
+        # else: cut = int(base * (1 - turn_strength)) # inside wheel turning
 
-        if self.smoothed_turn > 0.1:  # turn right
-            self.send(LEFT_MOTORS,  min(255, base + boost), current_direction)
-            self.send(RIGHT_MOTORS, cut, right_direction)
+        # current_direction = 0 if self.smoothed_y >= 0 else 1
+        # right_direction = 1 - current_direction # invert only right side, switched on car
 
-        elif self.smoothed_turn < -0.1:  # turn left
-            self.send(RIGHT_MOTORS, min(255, base + boost), right_direction)
-            self.send(LEFT_MOTORS,  cut, current_direction)
+        # if self.smoothed_turn > 0.1:  # turn right
+        #     self.send(LEFT_MOTORS,  min(255, base + boost), current_direction)
+        #     self.send(RIGHT_MOTORS, cut, right_direction)
 
-        else:  # straight
-            self.send(RIGHT_MOTORS, base, right_direction)
-            self.send(LEFT_MOTORS,  base, current_direction)
+        # elif self.smoothed_turn < -0.1:  # turn left
+        #     self.send(RIGHT_MOTORS, min(255, base + boost), right_direction)
+        #     self.send(LEFT_MOTORS,  cut, current_direction)
+
+        # else:  # straight
+        #     self.send(RIGHT_MOTORS, base, right_direction)
+        #     self.send(LEFT_MOTORS,  base, current_direction)
 
 app = QApplication(sys.argv)
 window = MainWindow()
