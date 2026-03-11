@@ -4,8 +4,28 @@
 
 from pynput.keyboard import Key, Listener
 
+# CW, CCW, Forward, Backwards
+direction = "off"
+# 0, 1, 2
+speed = 0
+# clockwise, counter-clockwise
+spin = "CW"
+
 def on_press(key):
-    print('{0} pressed'.format(key))
+    global direction, spin, speed
+    if (key == Key.up):
+        direction = "forward"
+        print(direction)
+    elif (key == Key.down):
+        direction = "backwards"
+        print(direction)
+    elif hasattr(key, 'char') and key.char == 'd':
+        direction = spin
+        print(direction)
+    elif hasattr(key, 'char') and key.char == 's':
+        spin = "CCW" if (spin == "CW") else "CCW"
+    elif hasattr(key, 'char') and key.char == 'g':
+        speed = 0 if (speed == 3) else speed + 1
 
 def on_release(key):
     print('{0} release'.format(key))
