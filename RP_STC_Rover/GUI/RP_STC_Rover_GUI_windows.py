@@ -122,8 +122,10 @@ class SerialThread(QThread):
                 self.data_received.emit(0, speed, 1, 0)
 
             elif hasattr(key, 'char') and key.char == 'd':
-                direction = spin
+                # direction = spin
+                direction = 1 if spin == "CCW" else -1
                 print(direction)
+                self.data_received.emit(0, speed, 0, direction)
 
         def on_release(key):
             global direction, spin, speed, speed_index
@@ -403,8 +405,16 @@ class MainWindow(QMainWindow):
         if not ws_connected:
             return  # skip everything if ESP is disconnected
         
-        self.send(RIGHT_MOTORS, int(y), reverse)
-        self.send(LEFT_MOTORS, int(y), reverse)
+        # dime is non-zero
+        if (dime): 
+            print(f"dime1: {dime}")
+            print(f"dime1: {0 if dime>0 else 1}")
+            print(f"dime1: {0 if dime<0 else 1}")
+            self.send(RIGHT_MOTORS, int(y), 0 if dime>0 else 1)
+            self.send(LEFT_MOTORS, int(y), 0 if dime<0 else 1)
+        else:
+            self.send(RIGHT_MOTORS, int(y), reverse)
+            self.send(LEFT_MOTORS, int(y), reverse)
 
 
         # # turn on a dime, left and right motors going opposite directions
