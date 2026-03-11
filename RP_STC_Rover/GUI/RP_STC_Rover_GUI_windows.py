@@ -3,6 +3,7 @@
 #   Closing out GUI (x on tab) causes stall. Ctrl+C works in terminal to close it. 
 #   Crashes if server disconnects? (new issue)
 #   Run GUI on reboot
+#   Only send motor message when command changes! (will probably stop lots of crashes)
 
 # Add microphone on controls
 # Add speaker on car
@@ -29,6 +30,8 @@ speed_index = 0
 speeds = [100, 200, 255]
 speed = 100
 spin = "CW"
+
+last_msg = None
 
 start_time = time.time()
 
@@ -109,26 +112,25 @@ class SerialThread(QThread):
     def run(self):
 
         def on_press(key):
-            global direction, spin, speed, speed_index
+            global direction, spin, speed, speed_index, last_msg
 
+            msg = None
             if key == Key.up:
                 direction = "forward"
-                print(direction)
-                self.data_received.emit(0, speed, 0, 0)
-
+                msg = (0, speed, 0, 0)
             elif key == Key.down:
                 direction = "backwards"
-                print(direction)
-                self.data_received.emit(0, speed, 1, 0)
-
+                msg = (0, speed, 1, 0)
             elif hasattr(key, 'char') and key.char == 'd':
-                # direction = spin
                 direction = 1 if spin == "CCW" else -1
-                print(direction)
-                self.data_received.emit(0, speed, 0, direction)
+                msg = (0, speed, 0, direction)
+
+            if msg != last_msg and msg is not None:
+                self.data_received.emit(*msg)
+                last_msg = msg
 
         def on_release(key):
-            global direction, spin, speed, speed_index
+            global direction, spin, speed, speed_index, last_msg
             # if key == Key.esc:
             #     # sys.exit()
             #     return False
@@ -142,15 +144,13 @@ class SerialThread(QThread):
                 speed = speeds[speed_index]
                 print("speed:", speed)
 
-            elif key in (Key.up, Key.down):
+            elif key in (Key.up, Key.down) or (hasattr(key, 'char') and key.char == 'd'):
                 direction = "off"
                 print(direction)
-                self.data_received.emit(0, 0, 0, 0)
-
-            elif hasattr(key, 'char') and key.char == 'd':
-                direction = "off"
-                print(direction)
-                self.data_received.emit(0, 0, 0, 0)
+                msg = (0, 0, 0, 0)
+                if msg != last_msg:
+                    self.data_received.emit(*msg)
+                    last_msg = msg
 
         with Listener(on_press=on_press, on_release=on_release) as listener:
             listener.join()
