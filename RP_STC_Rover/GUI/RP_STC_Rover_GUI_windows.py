@@ -11,10 +11,6 @@
 # Elements to add / take away on the GUI
     # Spin direction
     # Gear
-    # Controls connection
-    # Get rid of GPS
-    # Get rid of Battery placeholder
-    # Get rid of handheld connection
 
 import sys
 import os
@@ -72,7 +68,7 @@ AUDIO_RATE = 48000
 AUDIO_CHANNELS = 1
 
 speaker_index = sd.default.device[1]  # output device
-print(f"{speaker_index}")
+# print(f"{speaker_index}")
 
 
 class ReconnectThread(QThread):
@@ -132,12 +128,12 @@ class SerialThread(QThread):
             
             if hasattr(key, 'char') and key.char == 's':
                 spin = "CCW" if spin == "CW" else "CW"
-                print("spin:", spin)
+                # print("spin:", spin)
 
             elif hasattr(key, 'char') and key.char == 'g':
                 speed_index = 0 if speed_index == 2 else speed_index + 1
                 speed = speeds[speed_index]
-                print("speed:", speed)
+                # print("speed:", speed)
 
             elif key in (Key.up, Key.down) or (hasattr(key, 'char') and key.char == 'd'):
                 direction = "off"
@@ -223,38 +219,38 @@ class MainWindow(QMainWindow):
         """)
         layout.addWidget(self.camera_feed_label, stretch=3)
 
-        self.handheld_status_label = QLabel("Handheld: Disconnected")
-        self.handheld_status_label.setStyleSheet("""
-            QLabel {
-                font-size: 20px;
-            }
-        """)
-        infos_layout.addWidget(self.handheld_status_label)
+        # self.handheld_status_label = QLabel("Handheld: Disconnected")
+        # self.handheld_status_label.setStyleSheet("""
+        #     QLabel {
+        #         font-size: 20px;
+        #     }
+        # """)
+        # infos_layout.addWidget(self.handheld_status_label)
 
         initial_connected_message = "Connected" if ws_connected else "Disconnected"
-        self.car_connection_status_label = QLabel(f"Car Connected: {initial_connected_message}")
-        self.car_connection_status_label.setStyleSheet("""
+        self.controls_status_label = QLabel(f"Car Connected: {initial_connected_message}")
+        self.controls_status_label.setStyleSheet("""
             QLabel {
                 font-size: 20px;
             }
         """)
-        infos_layout.addWidget(self.car_connection_status_label)
+        infos_layout.addWidget(self.controls_status_label)
         
-        self.GPS_location_label = QLabel("GPS: Placeholder")
-        self.GPS_location_label.setStyleSheet("""
+        self.spin_label = QLabel("Spin: Placeholder")
+        self.spin_label.setStyleSheet("""
             QLabel {
                 font-size: 20px;
             }
         """)
-        infos_layout.addWidget(self.GPS_location_label)
+        infos_layout.addWidget(self.spin_label)
 
-        self.battery_location_label = QLabel("Battery: Placeholder")
-        self.battery_location_label.setStyleSheet("""
+        self.gear_label = QLabel("Gear: Placeholder")
+        self.gear_label.setStyleSheet("""
             QLabel {
                 font-size: 20px;
             }
         """)
-        infos_layout.addWidget(self.battery_location_label)
+        infos_layout.addWidget(self.gear_label)
 
         layout.addLayout(infos_layout, stretch=1)
 
@@ -300,9 +296,9 @@ class MainWindow(QMainWindow):
 
     def update_car_status(self, connected: bool):
         if connected:
-            self.car_connection_status_label.setText("Car Connected: Connected")
+            self.controls_status_label.setText("Car Connected: Connected")
         else:
-            self.car_connection_status_label.setText("Car Connected: Disconnected")
+            self.controls_status_label.setText("Car Connected: Disconnected")
 
     def send(self, motor, y, reverse):
         global ws_connected, ws
@@ -324,9 +320,9 @@ class MainWindow(QMainWindow):
         
         # dime is non-zero
         if (dime): 
-            print(f"dime1: {dime}")
-            print(f"dime1: {0 if dime>0 else 1}")
-            print(f"dime1: {0 if dime<0 else 1}")
+            # print(f"dime1: {dime}")
+            # print(f"dime1: {0 if dime>0 else 1}")
+            # print(f"dime1: {0 if dime<0 else 1}")
             self.send(RIGHT_MOTORS, int(y), 0 if dime>0 else 1)
             self.send(LEFT_MOTORS, int(y), 0 if dime<0 else 1)
         else:
