@@ -32,8 +32,8 @@ from pynput.keyboard import Key, Listener
 direction = "off"
 speed_index = 0
 speeds = [235, 245, 255]
-speed = 100
-spin = "CW"
+speed = 235
+spin = "Counter-Clockwise"
 
 last_msg = None
 
@@ -102,6 +102,7 @@ class SerialThread(QThread):
     # self.data_received.emit(x, y, reverse, dime)
     data_received = pyqtSignal(float, float, int, int)
     connection_changed = pyqtSignal(bool)
+    spin_gear_changed = pyqtSignal(str, int)
 
     def run(self):
 
@@ -116,7 +117,7 @@ class SerialThread(QThread):
                 direction = "backwards"
                 msg = (0, speed, 1, 0)
             elif hasattr(key, 'char') and key.char == 'd':
-                direction = 1 if spin == "CCW" else -1
+                direction = 1 if spin == "Clockwise" else -1
                 msg = (0, speed, 0, direction)
 
             if msg != last_msg and msg is not None:
@@ -127,13 +128,13 @@ class SerialThread(QThread):
             global direction, spin, speed, speed_index, last_msg
             
             if hasattr(key, 'char') and key.char == 's':
-                spin = "CCW" if spin == "CW" else "CW"
-                # print("spin:", spin)
+                spin = "Clockwise" if spin == "Counter-Clockwise" else "Counter-Clockwise"
+                self.spin_gear_changed.emit(spin, speed_index)
 
             elif hasattr(key, 'char') and key.char == 'g':
                 speed_index = 0 if speed_index == 2 else speed_index + 1
                 speed = speeds[speed_index]
-                # print("speed:", speed)
+                self.spin_gear_changed.emit(spin, speed_index)
 
             elif key in (Key.up, Key.down) or (hasattr(key, 'char') and key.char == 'd'):
                 direction = "off"
@@ -193,6 +194,7 @@ class MainWindow(QMainWindow):
         self.serial_thread.connection_changed.connect(self.update_handheld_status)
         self.serial_thread.start()
         self.reconnect_thread = None  # track if reconnection thread is active
+        self.serial_thread.spin_gear_changed.connect(self.update_spin_gear)
 
         # Start reconnect thread if not connected
         if not ws_connected: self.start_reconnect()
@@ -200,6 +202,8 @@ class MainWindow(QMainWindow):
         self.motor_opcode = 0  
         self.smoothed_y = 0  # keeps track of last smoothed Y value
         self.smoothed_turn = 0
+
+        global spin, speed
 
         # Main layout
         layout = QHBoxLayout()
@@ -236,7 +240,7 @@ class MainWindow(QMainWindow):
         """)
         infos_layout.addWidget(self.controls_status_label)
         
-        self.spin_label = QLabel("Spin: Placeholder")
+        self.spin_label = QLabel(f"Spin: {spin}")
         self.spin_label.setStyleSheet("""
             QLabel {
                 font-size: 20px;
@@ -244,7 +248,7 @@ class MainWindow(QMainWindow):
         """)
         infos_layout.addWidget(self.spin_label)
 
-        self.gear_label = QLabel("Gear: Placeholder")
+        self.gear_label = QLabel(f"Gear: {speed_index + 1}")
         self.gear_label.setStyleSheet("""
             QLabel {
                 font-size: 20px;
@@ -285,6 +289,10 @@ class MainWindow(QMainWindow):
             self.reconnect_thread = ReconnectThread(ip_string)
             self.reconnect_thread.status_update.connect(self.update_car_status)
             self.reconnect_thread.start()
+
+    def update_spin_gear(self, spin_val, gear_index):
+        self.spin_label.setText(f"Spin: {spin_val}")
+        self.gear_label.setText(f"Gear: {gear_index + 1}")
 
     def update_handheld_status(self, connected: bool):
         if connected:
