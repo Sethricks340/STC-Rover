@@ -8,10 +8,6 @@
 
 # Add speaker on car
 
-# Elements to add / take away on the GUI
-    # Spin direction
-    # Gear
-
 import sys
 import os
 import cv2  
