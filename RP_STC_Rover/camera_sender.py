@@ -33,9 +33,6 @@ async def send_camera_audio(websocket):
     def audio_callback(indata, frames, time_info, status):
         # global audio_start_time
         audio_queue.put_nowait(indata.copy().tobytes())
-        # audio_elapsed_time = time.time() - audio_start_time
-        # print(f'Time since last audio send: {audio_elapsed_time} seconds')
-        # audio_start_time = time.time()
 
     # Start audio input stream (mic)
     stream = sd.InputStream(device=mic_index,
@@ -53,10 +50,6 @@ async def send_camera_audio(websocket):
                 _, buffer = cv2.imencode('.jpg', frame)
                 jpg_text = base64.b64encode(buffer).decode('utf-8')
                 await websocket.send(f"VID:{jpg_text}")
-
-                # video_elapsed_time = time.time() - video_start_time
-                # print(f'Time since last video send: {video_elapsed_time} seconds')
-                # video_start_time = time.time()
 
             # Send audio if available
             while not audio_queue.empty():

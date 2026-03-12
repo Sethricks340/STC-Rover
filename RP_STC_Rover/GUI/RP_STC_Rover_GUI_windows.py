@@ -1,8 +1,9 @@
 # TODO:
-#   Camera lag when motor code running
 #   Closing out GUI (x on tab) causes stall. Ctrl+C works in terminal to close it. 
 #   Crashes if server disconnects? (new issue)
 #   Test on public / different wifi
+#   Controls disconnect periodically??
+#   Filter out low noise
 
 # Add speaker on car
 
@@ -60,16 +61,6 @@ PORT = 8765
 
 AUDIO_RATE = 48000
 AUDIO_CHANNELS = 1
-
-# speaker_index = None
-# for i, dev in enumerate(sd.query_devices()):
-#     if "UACDemoV1.0" in dev['name']:
-#         speaker_index = i
-#         break
-
-# if speaker_index is None:
-#     print("USB speaker not found, using default output")
-#     speaker_index = sd.default.device[1]  # output device
 
 speaker_index = sd.default.device[1]  # output device
 print(f"{speaker_index}")
@@ -129,9 +120,6 @@ class SerialThread(QThread):
 
         def on_release(key):
             global direction, spin, speed, speed_index, last_msg
-            # if key == Key.esc:
-            #     # sys.exit()
-            #     return False
             
             if hasattr(key, 'char') and key.char == 's':
                 spin = "CCW" if spin == "CW" else "CW"
@@ -152,84 +140,6 @@ class SerialThread(QThread):
 
         with Listener(on_press=on_press, on_release=on_release) as listener:
             listener.join()
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-        # handeld = None
-        # x = y = reverse = dime = None
-        # zeros_sent = False
-        # # self.data_received.emit(0, 0, 0, 0) # Turn off motors if exception triggered
-        # while True:
-        #     if handeld is None:
-        #         try:
-
-        #             # for windows
-        #             if os.name == 'nt':
-        #                 pass
-        #                 # ports = serial.tools.list_ports.comports()
-        #                 # for port in ports:
-        #                 #     if "USB-SERIAL CH340" in port.description: # Search for handheld
-        #                 #         print(f"Found Handheld: {port.device}")
-        #                 #         handeld = serial.Serial(port.device, 115200, timeout=1)
-        #                 #         self.connection_changed.emit(True)
-
-        #             # for raspberry pi
-        #             elif os.name == 'posix':
-        #                 handeld = serial.Serial('/dev/ttyUSB0', 115200, timeout=1)
-        #                 self.connection_changed.emit(True)
-
-        #         except serial.SerialException:
-        #             print("Handheld not connected, retrying in 1 second...")
-        #             self.connection_changed.emit(False)
-        #             self.msleep(1000)
-        #             continue  # try again 
-        #     try:
-        #         line = handeld.readline().decode(errors="ignore").strip()
-        #         if line.startswith("X:"):
-        #             x = float(line[2:])
-        #         elif line.startswith("Y:"):
-        #             y = float(line[2:])
-        #         elif line.startswith("R:"): 
-        #             reverse = int(line[2:])
-        #         elif line.startswith("D:"):
-        #             dime = int(line[2:])
-        #         if x is not None and y is not None and reverse is not None and dime is not None:
-        #             self.data_received.emit(x, y, reverse, dime)
-        # #             # print(f"X: {x}, y: {y}, Reverse: {reverse}")
-        # #             x = y = reverse = dime = None
-
-        #     # except (serial.SerialException, OSError) as e:
-        #     except Exception as e:
-        #         # print(f"Handheld disconnected: {e}")
-        #         try:
-        #             handeld.close()
-        #         except:
-        #             pass    
-        #         if (not zeros_sent): # If any of the values were non-zero, there was a connection
-        #             self.data_received.emit(0, 0, 0, 0) # Turn off motors if exception triggered
-        #             zeros_sent = True
-        #             print("zeros sent")
-        #         self.connection_changed.emit(False)
-        #         handeld = None  # will retry connection on next loop
-        #         print(f"Handheld not connected, {e} retrying in 1 second...")
-        #         self.connection_changed.emit(False)
-        #         self.msleep(1000)
-        #         continue  # try again 
-        #     except ValueError:
-        #         continue  # ignore bad lines
-
-
 
 # --- Thread to receive camera + audio ---
 class CameraAudioThread(QThread):
@@ -413,46 +323,6 @@ class MainWindow(QMainWindow):
         else:
             self.send(RIGHT_MOTORS, int(y), reverse)
             self.send(LEFT_MOTORS, int(y), reverse)
-
-
-        # # turn on a dime, left and right motors going opposite directions
-        # if (dime):
-        #     self.send(RIGHT_MOTORS, 200, 0) # right motors reversed on car
-        #     self.send(LEFT_MOTORS, 200, 0)
-        #     self.smoothed_y = 0  #reset speed smoothing
-        #     return
-
-        # alpha = 0.1  # smoothing factor
-        # self.smoothed_y += alpha * (y - self.smoothed_y)
-        # self.smoothed_turn += alpha * (turn - self.smoothed_turn)
-
-        # # soft reverse logic
-        # current_direction = 0 if self.smoothed_y >= 0 else 1
-        # right_direction = 1 - current_direction   # invert only right side, switched on car
-
-        # turn_strength = min(1.0, abs(self.smoothed_turn))
-
-        # base = int(abs(self.smoothed_y) * 255)  # Max speeds
-        # # base = int(abs(self.smoothed_y) * 255 / 2)  # Halfed speeds (doesn't work as well)
-        # boost = int(base * turn_strength) # outside wheel turning
-
-        # if turn_strength > 0.7: cut = 0
-        # else: cut = int(base * (1 - turn_strength)) # inside wheel turning
-
-        # current_direction = 0 if self.smoothed_y >= 0 else 1
-        # right_direction = 1 - current_direction # invert only right side, switched on car
-
-        # if self.smoothed_turn > 0.1:  # turn right
-        #     self.send(LEFT_MOTORS,  min(255, base + boost), current_direction)
-        #     self.send(RIGHT_MOTORS, cut, right_direction)
-
-        # elif self.smoothed_turn < -0.1:  # turn left
-        #     self.send(RIGHT_MOTORS, min(255, base + boost), right_direction)
-        #     self.send(LEFT_MOTORS,  cut, current_direction)
-
-        # else:  # straight
-        #     self.send(RIGHT_MOTORS, base, right_direction)
-        #     self.send(LEFT_MOTORS,  base, current_direction)
 
 app = QApplication(sys.argv)
 window = MainWindow()

@@ -31,10 +31,6 @@ async def handler(websocket):
 
                 last_command_time = time.time()
 
-                # elapsed_time = time.time() - start_time
-                # print(f'Time since last motor code: {elapsed_time} seconds')
-                # start_time = time.time()
-
                 print(f"Opcode: {opcode}, Motor: {motor_number}, Power: {power}, PWM: {pwm}, Direction: {direction}")
                 if pwm < 50:
                     if not motor_number:
