@@ -25,7 +25,7 @@ from pynput.keyboard import Key, Listener
 
 direction = "off"
 speed_index = 0
-speeds = [100, 200, 255]
+speeds = [235, 245, 255]
 speed = 100
 spin = "CW"
 
@@ -144,7 +144,7 @@ class SerialThread(QThread):
 
             elif key in (Key.up, Key.down) or (hasattr(key, 'char') and key.char == 'd'):
                 direction = "off"
-                print(direction)
+                # print(direction)
                 msg = (0, 0, 0, 0)
                 if msg != last_msg:
                     self.data_received.emit(*msg)

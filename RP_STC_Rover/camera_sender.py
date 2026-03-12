@@ -64,7 +64,8 @@ async def send_camera_audio(websocket):
                 audio_text = base64.b64encode(audio_bytes).decode('utf-8')
                 await websocket.send(f"AUD:{audio_text}")
 
-            await asyncio.sleep(0.01)
+            # await asyncio.sleep(0.01)
+            await asyncio.sleep(0.05)
     except websockets.exceptions.ConnectionClosed:
         print("Client disconnected")
     finally:
