@@ -8,6 +8,14 @@
 
 # Add speaker on car
 
+# Elements to add / take away on the GUI
+    # Spin direction
+    # Gear
+    # Controls connection
+    # Get rid of GPS
+    # Get rid of Battery placeholder
+    # Get rid of handheld connection
+
 import sys
 import os
 import cv2  
