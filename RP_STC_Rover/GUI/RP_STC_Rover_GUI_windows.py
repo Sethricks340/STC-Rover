@@ -4,6 +4,7 @@
 #   Test on public / different wifi
 #   Controls disconnect periodically??
 #   Filter out low noise
+#   Run car code on reboot
 
 # Add speaker on car
 
