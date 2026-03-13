@@ -1,7 +1,6 @@
 # TODO:
 #   Closing out GUI (x on tab) causes stall. Ctrl+C works in terminal to close it. 
 #   Crashes if server disconnects? (new issue)
-#   Test on public / different wifi
 #   Controls disconnect periodically??
 #   Filter out low noise
 #   Run car code on reboot
@@ -47,9 +46,11 @@ ws = websocket.WebSocket()
 
 try:
     # Tailscale rover IP:
-    ip_string = "ws://100.94.206.108:8081/motors"
+    # ip_string = "ws://100.94.206.108:8081/motors"
+    ip_string = "ws://100.94.206.108:8081"
     # 100.94.206.108 
-    ws.connect(ip_string)
+    # ws.connect(ip_string)
+    ws.connect(ip_string, ping_interval=20, ping_timeout=5)
     print("Controls WebSocket connected")
     ws_connected = True
 except Exception as e:
@@ -85,7 +86,8 @@ class ReconnectThread(QThread):
                 pass
             try:
                 ws = websocket.WebSocket()
-                ws.connect(self.ip_string)
+                # ws.connect(self.ip_string)
+                ws.connect(self.ip_string, ping_interval=20, ping_timeout=5)
                 ws_connected = True
                 self.status_update.emit(True)  # Connection successful
             except Exception as e:

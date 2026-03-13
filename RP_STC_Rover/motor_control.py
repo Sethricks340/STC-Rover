@@ -62,7 +62,8 @@ async def watchdog():
 
 async def main():
     asyncio.create_task(watchdog())
-    async with websockets.serve(handler, "0.0.0.0", 8081):
+    # async with websockets.serve(handler, "0.0.0.0", 8081):
+    async with websockets.serve(handler, "0.0.0.0", 8081, ping_interval=None):
         print("WebSocket server running on ws://0.0.0.0:8081")
         await asyncio.Future()  # run forever
 
