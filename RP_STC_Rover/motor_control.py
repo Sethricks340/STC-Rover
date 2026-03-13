@@ -7,8 +7,7 @@ import time
 
 start_time = time.time()
 last_command_time = time.time()
-TIMEOUT = 1000
-# TIMEOUT = 0.75
+TIMEOUT = 3
 
 IN1, IN2, IN3, IN4 = 23, 24, 27, 22
 ENA, ENB = 18, 19
