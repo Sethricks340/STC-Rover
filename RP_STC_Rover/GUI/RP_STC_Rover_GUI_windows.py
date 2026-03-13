@@ -1,7 +1,6 @@
 # TODO:
 #   Closing out GUI (x on tab) causes stall. Ctrl+C works in terminal to close it. 
 #   Crashes if server disconnects? (new issue)
-#   Controls disconnect periodically??
 #   Filter out low noise
 #   Run car code on reboot
 
