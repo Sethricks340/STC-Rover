@@ -23,6 +23,9 @@ camera_index = 0  # Usually 0 for the first USB camera
 async def send_camera_audio(websocket):
     # global video_start_time, audio_start_time
     cap = cv2.VideoCapture(camera_index)
+    cap.set(cv2.CAP_PROP_FRAME_WIDTH, 320)
+    cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 240)
+    cap.set(cv2.CAP_PROP_FPS, 15)
     if not cap.isOpened():
         print("Cannot open camera")
         return
@@ -47,7 +50,8 @@ async def send_camera_audio(websocket):
             # Send video
             ret, frame = cap.read()
             if ret:
-                _, buffer = cv2.imencode('.jpg', frame)
+                # _, buffer = cv2.imencode('.jpg', frame)
+                _, buffer = cv2.imencode('.jpg', frame, [cv2.IMWRITE_JPEG_QUALITY, 40])
                 jpg_text = base64.b64encode(buffer).decode('utf-8')
                 await websocket.send(f"VID:{jpg_text}")
 
