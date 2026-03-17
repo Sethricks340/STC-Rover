@@ -22,6 +22,7 @@ async def stream_microphone():
         def callback(indata, frames, time_info, status):
             audio_bytes = indata.astype(np.float32).tobytes()
             audio_queue.put_nowait(audio_bytes)
+            print("Sending audio chunk:", len(audio_bytes), "bytes")  
 
         with sd.InputStream(channels=AUDIO_CHANNELS,
                             samplerate=AUDIO_RATE,

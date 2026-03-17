@@ -37,6 +37,7 @@ async def handler(websocket):
             if message.startswith("MIC:"):
                 audio_bytes = base64.b64decode(message[4:])
                 audio_array = np.frombuffer(audio_bytes, dtype=np.float32)
+                print("Received chunk:", len(audio_array))
                 audio_array = np.clip(audio_array * 3.0, -1.0, 1.0)  # optional gain
                 audio_stream.write(audio_array)
             else:
