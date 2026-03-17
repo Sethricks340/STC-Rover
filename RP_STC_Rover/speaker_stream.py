@@ -3,45 +3,72 @@ import websockets
 import base64
 import numpy as np
 import sounddevice as sd
+import signal
+import sys
 
-TAILSCALE_IP = "100.94.206.108"
+TAILSCALE_IP = "0.0.0.0"  # bind to all interfaces
 MIC_PORT = 8766
 
 AUDIO_RATE = 48000
 AUDIO_CHANNELS = 1
 AUDIO_BLOCKSIZE = 1024
 
-# Output device (change name if needed)
+# Choose output device (USB speaker or default)
 speaker_index = None
 for i, dev in enumerate(sd.query_devices()):
-    if "UACDemoV1.0" in dev['name']:  # your USB speaker name
+    if "UACDemoV1.0" in dev['name']:  # replace with your speaker name
         speaker_index = i
         break
 if speaker_index is None:
     speaker_index = sd.default.device[1]  # fallback default output
 
-async def receive_mic():
-    while True:
-        try:
-            uri = f"ws://{TAILSCALE_IP}:{MIC_PORT}"
-            async with websockets.connect(uri) as websocket:
-                print(f"Connected to microphone stream at {uri}")
+# global audio stream
+audio_stream = sd.OutputStream(device=speaker_index,
+                               samplerate=AUDIO_RATE,
+                               channels=AUDIO_CHANNELS,
+                               blocksize=AUDIO_BLOCKSIZE)
+audio_stream.start()
 
-                stream = sd.OutputStream(device=speaker_index,
-                                         samplerate=AUDIO_RATE,
-                                         channels=AUDIO_CHANNELS,
-                                         blocksize=AUDIO_BLOCKSIZE)
-                stream.start()
 
-                while True:
-                    data = await websocket.recv()
-                    if data.startswith("MIC:"):
-                        audio_bytes = base64.b64decode(data[4:])
-                        audio_array = np.frombuffer(audio_bytes, dtype=np.float32)
-                        audio_array = np.clip(audio_array * 3.0, -1.0, 1.0)
-                        stream.write(audio_array)
-        except (ConnectionRefusedError, OSError, websockets.exceptions.ConnectionClosed):
-            print("Connection lost, retrying in 2 seconds...")
-            await asyncio.sleep(2)
+async def handler(websocket):
+    print(f"Client connected: {websocket.remote_address}")
+    try:
+        async for message in websocket:
+            if message.startswith("MIC:"):
+                audio_bytes = base64.b64decode(message[4:])
+                audio_array = np.frombuffer(audio_bytes, dtype=np.float32)
+                audio_array = np.clip(audio_array * 3.0, -1.0, 1.0)  # optional gain
+                audio_stream.write(audio_array)
+            else:
+                print(f"Received unknown message: {message}")
+    except websockets.exceptions.ConnectionClosed:
+        print(f"Client disconnected: {websocket.remote_address}")
 
-asyncio.run(receive_mic())
+
+async def main():
+    async with websockets.serve(handler, TAILSCALE_IP, MIC_PORT, ping_interval=None):
+        print(f"Microphone WebSocket server running on ws://{TAILSCALE_IP}:{MIC_PORT}")
+        await asyncio.Future()  # run forever
+
+
+def cleanup():
+    print("Stopping audio stream...")
+    audio_stream.stop()
+    audio_stream.close()
+
+
+def handle_exit(signum, frame):
+    cleanup()
+    sys.exit(0)
+
+
+signal.signal(signal.SIGINT, handle_exit)
+signal.signal(signal.SIGTERM, handle_exit)
+
+loop = asyncio.get_event_loop()
+try:
+    loop.run_until_complete(main())
+except asyncio.CancelledError:
+    pass
+finally:
+    cleanup()
