@@ -42,7 +42,7 @@ async def handler(websocket):
 
             audio_bytes = base64.b64decode(message)
             audio_array = np.frombuffer(audio_bytes, dtype=np.float32)
-            print("Received chunk:", len(audio_array))
+            # print("Received chunk:", len(audio_array))
             audio_array = np.clip(audio_array * 3.0, -1.0, 1.0)
             audio_array = audio_array.reshape(-1, AUDIO_CHANNELS)
             audio_stream.write(audio_array)
