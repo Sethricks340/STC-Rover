@@ -18,6 +18,7 @@ speaker_index = None
 for i, dev in enumerate(sd.query_devices()):
     if "UACDemoV1.0" in dev['name']:  # replace with your speaker name
         speaker_index = i
+        print("Using speaker device:", speaker_index, sd.query_devices()[speaker_index])
         break
 if speaker_index is None:
     speaker_index = sd.default.device[1]  # fallback default output

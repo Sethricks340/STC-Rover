@@ -31,7 +31,7 @@ async def stream_microphone():
             print("Streaming microphone...")
             while True:
                 audio_bytes = await audio_queue.get()
-                msg = "AUD:" + base64.b64encode(audio_bytes).decode('ascii')
+                msg = "MIC:" + base64.b64encode(audio_bytes).decode('ascii')
                 await websocket.send(msg)
 
 asyncio.run(stream_microphone())
