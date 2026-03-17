@@ -35,13 +35,15 @@ async def handler(websocket):
     print(f"Client connected: {websocket.remote_address}")
     try:
         async for message in websocket:
-            # message is already a string (text)
-            audio_bytes = base64.b64decode(message)
-            audio_array = np.frombuffer(audio_bytes, dtype=np.float32)
-            print("Received chunk:", len(audio_array))
-            audio_array = np.clip(audio_array * 3.0, -1.0, 1.0)
-            audio_array = audio_array.reshape(-1, AUDIO_CHANNELS)
-            audio_stream.write(audio_array)
+            if isinstance(message, bytes):  # <- handle binary frames
+                audio_bytes = message
+                audio_array = np.frombuffer(audio_bytes, dtype=np.float32)
+                print("Received chunk:", len(audio_array))
+                audio_array = np.clip(audio_array * 3.0, -1.0, 1.0)
+                audio_array = audio_array.reshape(-1, AUDIO_CHANNELS)
+                audio_stream.write(audio_array)
+            else:
+                print(f"Received unknown message: {message}")
     except websockets.exceptions.ConnectionClosed:
         print(f"Client disconnected: {websocket.remote_address}")
 
