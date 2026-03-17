@@ -32,19 +32,22 @@ audio_stream.start()
 
 
 async def handler(websocket):
-    print(f"Client connected: {websocket.remote_address}")
+    addr = websocket.remote_address
+    print(f"Client connected: {addr}")
     try:
         async for message in websocket:
-            if isinstance(message, bytes):
-                audio_bytes = base64.b64decode(message[4:])
-                audio_array = np.frombuffer(audio_bytes, dtype=np.float32)
-                print("Received chunk:", len(audio_array))
-                audio_array = np.clip(audio_array * 3.0, -1.0, 1.0)  # optional gain
-                audio_stream.write(audio_array)
-            else:
-                print(f"Received raw message: {message}")
+            # make sure message is bytes
+            if isinstance(message, str):
+                message = message.encode('ascii')
+
+            audio_bytes = base64.b64decode(message)
+            audio_array = np.frombuffer(audio_bytes, dtype=np.float32)
+            print("Received chunk:", len(audio_array))
+            audio_array = np.clip(audio_array * 3.0, -1.0, 1.0)
+            audio_array = audio_array.reshape(-1, AUDIO_CHANNELS)
+            audio_stream.write(audio_array)
     except websockets.exceptions.ConnectionClosed:
-        print(f"Client disconnected: {websocket.remote_address}")
+        print(f"Client disconnected: {addr}")
 
 
 async def main():
