@@ -35,7 +35,7 @@ async def receive_mic():
 
                 while True:
                     data = await websocket.recv()
-                    if data.startswith("AUD:"):
+                    if data.startswith("MIC:"):
                         audio_bytes = base64.b64decode(data[4:])
                         audio_array = np.frombuffer(audio_bytes, dtype=np.float32)
                         audio_array = np.clip(audio_array * 3.0, -1.0, 1.0)
