@@ -9,7 +9,7 @@ PI_IP = "100.94.206.108"  # Pi Tailscale IP
 PORT = 8766
 AUDIO_RATE = 48000
 AUDIO_CHANNELS = 1
-BLOCKSIZE = 1024
+BLOCKSIZE = 2048
 
 async def send_audio():
     audio_queue = asyncio.Queue()
