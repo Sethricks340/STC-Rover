@@ -120,6 +120,7 @@
 # sd.play(tone, samplerate=AUDIO_RATE, device=speaker_index)
 # sd.wait()
 # print("Done")
+
 import asyncio
 import websockets
 import base64
@@ -129,7 +130,6 @@ import sounddevice as sd
 PORT = 8766
 AUDIO_RATE = 48000
 AUDIO_CHANNELS = 1
-BLOCKSIZE = 256  # smaller block for low latency
 
 # USB speaker
 speaker_index = None
@@ -140,12 +140,27 @@ for i, dev in enumerate(sd.query_devices()):
 if speaker_index is None:
     raise RuntimeError("USB speaker not found")
 
+# Audio queue
+audio_queue = asyncio.Queue()
+
+def audio_callback(outdata, frames, time, status):
+    try:
+        chunk = audio_queue.get_nowait()
+        if len(chunk) < frames:
+            outdata[:len(chunk)] = chunk
+            outdata[len(chunk):] = 0
+        else:
+            outdata[:] = chunk[:frames]
+    except asyncio.QueueEmpty:
+        outdata[:] = 0
+
 audio_stream = sd.OutputStream(
     device=speaker_index,
     samplerate=AUDIO_RATE,
     channels=AUDIO_CHANNELS,
     dtype='float32',
-    blocksize=BLOCKSIZE
+    blocksize=1024,
+    callback=audio_callback
 )
 audio_stream.start()
 
@@ -154,11 +169,16 @@ async def handler(ws):
         if data.startswith("MIC:"):
             audio_bytes = base64.b64decode(data[4:])
             audio_array = np.frombuffer(audio_bytes, dtype=np.float32).reshape(-1, AUDIO_CHANNELS)
-            audio_stream.write(audio_array)  # write immediately
+            
+            # apply gain and clip to avoid distortion
+            GAIN = 3.0
+            audio_array = np.clip(audio_array * GAIN, -1.0, 1.0)
+            
+            await audio_queue.put(audio_array)
 
 async def main():
     async with websockets.serve(handler, "0.0.0.0", PORT, ping_interval=None):
-        print(f"Low-latency server running on ws://0.0.0.0:{PORT}")
+        print(f"Streaming server running on ws://0.0.0.0:{PORT}")
         await asyncio.Future()
 
 asyncio.run(main())

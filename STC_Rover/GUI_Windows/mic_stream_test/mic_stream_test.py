@@ -89,43 +89,31 @@
 # print("Done")
 
 
-
 import asyncio
 import websockets
 import base64
 import sounddevice as sd
+import numpy as np
 
 PI_IP = "100.94.206.108"
 PORT = 8766
 AUDIO_RATE = 48000
 AUDIO_CHANNELS = 1
-BLOCKSIZE = 256
+DURATION = 0.5  # half second
 
-async def stream_audio():
-    audio_queue = asyncio.Queue()
-
-    def audio_callback(indata, frames, time, status):
-        audio_queue.put_nowait(indata.copy().tobytes())
-
-    stream = sd.InputStream(
-        samplerate=AUDIO_RATE,
-        channels=AUDIO_CHANNELS,
-        blocksize=BLOCKSIZE,
-        callback=audio_callback
-    )
-    stream.start()
-
+async def send_one_block():
+    # Record a short snippet
+    recording = sd.rec(int(DURATION * AUDIO_RATE),
+                       samplerate=AUDIO_RATE,
+                       channels=AUDIO_CHANNELS,
+                       dtype='float32')
+    sd.wait()
+    
+    audio_bytes = recording.tobytes()
+    audio_text = base64.b64encode(audio_bytes).decode('utf-8')
+    
     async with websockets.connect(f"ws://{PI_IP}:{PORT}") as ws:
-        print(f"Connected to Pi at ws://{PI_IP}:{PORT}")
-        try:
-            while True:
-                audio_bytes = await audio_queue.get()
-                audio_text = base64.b64encode(audio_bytes).decode('utf-8')
-                await ws.send(f"MIC:{audio_text}")
-        except websockets.exceptions.ConnectionClosed:
-            print("Connection closed")
-        finally:
-            stream.stop()
-            stream.close()
+        await ws.send(f"MIC:{audio_text}")
+        print("Sent one audio block")
 
-asyncio.run(stream_audio())
+asyncio.run(send_one_block())
