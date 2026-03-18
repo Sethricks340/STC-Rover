@@ -99,7 +99,7 @@ PI_IP = "100.94.206.108"
 PORT = 8766
 AUDIO_RATE = 48000
 AUDIO_CHANNELS = 1
-BLOCKSIZE = 1024
+BLOCKSIZE = 1024  # match Pi's blocksize
 
 async def stream_audio():
     audio_queue = asyncio.Queue()
@@ -111,6 +111,7 @@ async def stream_audio():
         samplerate=AUDIO_RATE,
         channels=AUDIO_CHANNELS,
         blocksize=BLOCKSIZE,
+        dtype='float32',
         callback=audio_callback
     )
     stream.start()
