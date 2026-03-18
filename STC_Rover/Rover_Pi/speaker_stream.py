@@ -96,27 +96,63 @@
 
 
 
-import sounddevice as sd
+# import sounddevice as sd
+# import numpy as np
+
+# AUDIO_RATE = 48000
+# DURATION = 3  # seconds
+# FREQ = 440  # A4
+
+# # Replace with your USB speaker index on Pi
+# speaker_index = None
+# for i, dev in enumerate(sd.query_devices()):
+#     if "UACDemoV1.0" in dev['name']:
+#         speaker_index = i
+#         print(f"Found USB speaker at index {i}")
+#         break
+# if speaker_index is None:
+#     raise RuntimeError("USB speaker not found")
+
+# t = np.linspace(0, DURATION, int(AUDIO_RATE * DURATION), endpoint=False)
+# tone = 0.5 * np.sin(2 * np.pi * FREQ * t).astype(np.float32)
+
+# print("Playing test tone on USB speaker...")
+# sd.play(tone, samplerate=AUDIO_RATE, device=speaker_index)
+# sd.wait()
+# print("Done")
+
+
+
+import asyncio
+import websockets
+import base64
 import numpy as np
+import sounddevice as sd
 
+PORT = 8766
 AUDIO_RATE = 48000
-DURATION = 3  # seconds
-FREQ = 440  # A4
+AUDIO_CHANNELS = 1
 
-# Replace with your USB speaker index on Pi
+# Set your USB speaker index
 speaker_index = None
 for i, dev in enumerate(sd.query_devices()):
     if "UACDemoV1.0" in dev['name']:
         speaker_index = i
-        print(f"Found USB speaker at index {i}")
         break
 if speaker_index is None:
     raise RuntimeError("USB speaker not found")
 
-t = np.linspace(0, DURATION, int(AUDIO_RATE * DURATION), endpoint=False)
-tone = 0.5 * np.sin(2 * np.pi * FREQ * t).astype(np.float32)
+async def handler(ws):
+    async for data in ws:
+        if data.startswith("MIC:"):
+            audio_bytes = base64.b64decode(data[4:])
+            audio_array = np.frombuffer(audio_bytes, dtype=np.float32).reshape(-1, AUDIO_CHANNELS)
+            sd.play(audio_array, samplerate=AUDIO_RATE, device=speaker_index)
+            sd.wait()
+            print("Played one audio block")
 
-print("Playing test tone on USB speaker...")
-sd.play(tone, samplerate=AUDIO_RATE, device=speaker_index)
-sd.wait()
-print("Done")
+async def main():
+    async with websockets.serve(handler, "0.0.0.0", PORT):
+        await asyncio.Future()
+
+asyncio.run(main())

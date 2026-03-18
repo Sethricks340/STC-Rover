@@ -69,21 +69,50 @@
 
 
 
+# import sounddevice as sd
+# import numpy as np
+
+# AUDIO_RATE = 48000
+# AUDIO_CHANNELS = 1
+# DURATION = 5  # seconds
+
+# print("Recording 5 seconds from default mic...")
+# recording = sd.rec(int(DURATION * AUDIO_RATE),
+#                    samplerate=AUDIO_RATE,
+#                    channels=AUDIO_CHANNELS,
+#                    dtype='float32')  # default device
+# sd.wait()
+
+# print("Playback...")
+# sd.play(recording, samplerate=AUDIO_RATE)
+# sd.wait()
+# print("Done")
+
+
+
 import sounddevice as sd
 import numpy as np
+import base64
+import websockets
+import asyncio
 
+PI_IP = "100.94.206.108"
+PORT = 8766
 AUDIO_RATE = 48000
 AUDIO_CHANNELS = 1
-DURATION = 5  # seconds
 
-print("Recording 5 seconds from default mic...")
-recording = sd.rec(int(DURATION * AUDIO_RATE),
-                   samplerate=AUDIO_RATE,
-                   channels=AUDIO_CHANNELS,
-                   dtype='float32')  # default device
-sd.wait()
+async def send_one_block():
+    # Record 0.5 second
+    duration = 0.5
+    recording = sd.rec(int(duration * AUDIO_RATE), samplerate=AUDIO_RATE,
+                       channels=AUDIO_CHANNELS, dtype='float32')
+    sd.wait()
+    
+    audio_bytes = recording.tobytes()
+    audio_text = base64.b64encode(audio_bytes).decode('utf-8')
+    
+    async with websockets.connect(f"ws://{PI_IP}:{PORT}") as ws:
+        await ws.send(f"MIC:{audio_text}")
+        print("Sent one audio block")
 
-print("Playback...")
-sd.play(recording, samplerate=AUDIO_RATE)
-sd.wait()
-print("Done")
+asyncio.run(send_one_block())
