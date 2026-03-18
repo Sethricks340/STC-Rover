@@ -53,7 +53,8 @@ async def handler(ws):
                 audio_array = np.frombuffer(audio_bytes, dtype=np.float32).reshape(-1, AUDIO_CHANNELS)
 
                 # Apply gain
-                GAIN = 1.5
+                # GAIN = 1.5
+                GAIN = 5.0
                 audio_array = np.clip(audio_array * GAIN, -1.0, 1.0)
 
                 # Keep queue very short to reduce latency
