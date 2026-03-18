@@ -120,7 +120,6 @@
 # sd.play(tone, samplerate=AUDIO_RATE, device=speaker_index)
 # sd.wait()
 # print("Done")
-
 import sounddevice as sd
 import numpy as np
 
