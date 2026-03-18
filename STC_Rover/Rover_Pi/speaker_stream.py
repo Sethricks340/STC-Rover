@@ -35,7 +35,9 @@ async def handler(websocket):
     audio_stream = sd.OutputStream(
         device=speaker_index,
         samplerate=AUDIO_RATE,
-        channels=AUDIO_CHANNELS
+        channels=AUDIO_CHANNELS,
+        dtype='float32',        # make sure this matches what Windows sends
+        blocksize=1024           # optional, match sender blocksize
     )
     audio_stream.start()
 
