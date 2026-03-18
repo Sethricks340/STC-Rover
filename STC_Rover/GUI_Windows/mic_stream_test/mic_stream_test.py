@@ -20,7 +20,7 @@ async def send_audio():
         samplerate=AUDIO_RATE,
         channels=AUDIO_CHANNELS,
         blocksize=BLOCKSIZE,
-        dtype='int16',
+        dtype='float32',
         callback=audio_callback
     )
     stream.start()

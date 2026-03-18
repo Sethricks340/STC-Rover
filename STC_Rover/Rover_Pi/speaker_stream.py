@@ -50,16 +50,12 @@ async def handler(ws):
         async for data in ws:
             if data.startswith("MIC:"):
                 audio_bytes = base64.b64decode(data[4:])
-                # audio_array = np.frombuffer(audio_bytes, dtype=np.float32).reshape(-1, AUDIO_CHANNELS)
-
-                audio_array = np.frombuffer(audio_bytes, dtype=np.int16).astype(np.float32) / 32768.0
+                audio_array = np.frombuffer(audio_bytes, dtype=np.float32).reshape(-1, AUDIO_CHANNELS)
 
                 # Apply gain
                 # GAIN = 1.5
-                # GAIN = 5.0
-                # GAIN = 3.0
-                # GAIN = 10.0
-                # audio_array = np.clip(audio_array * GAIN, -1.0, 1.0)
+                GAIN = 5.0
+                audio_array = np.clip(audio_array * GAIN, -1.0, 1.0)
 
                 # Keep queue very short to reduce latency
                 while audio_buffer.qsize() > 1:
