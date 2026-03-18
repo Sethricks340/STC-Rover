@@ -42,16 +42,14 @@ async def handler(websocket):
     try:
         async for data in websocket:
             if isinstance(data, str) and data.startswith("MIC:"):
-                print(f"MIC data received")
                 audio_bytes = base64.b64decode(data[4:])
-                # audio_array = np.frombuffer(audio_bytes, dtype=np.float32)
                 audio_array = np.frombuffer(audio_bytes, dtype=np.float32).reshape(-1, AUDIO_CHANNELS)
-                audio_stream.write(audio_array)
-
-                # gain = 3.0
+                
+                # Apply gain first
                 gain = 1.0
                 audio_array = np.clip(audio_array * gain, -1.0, 1.0)
-
+                
+                # Write only once
                 audio_stream.write(audio_array)
             else:
                 print(f"Received raw message: {data}")
