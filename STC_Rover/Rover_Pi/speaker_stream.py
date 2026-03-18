@@ -7,7 +7,6 @@ import sounddevice as sd
 PORT = 8766
 AUDIO_RATE = 48000
 AUDIO_CHANNELS = 1
-# BLOCKSIZE = 512
 BLOCKSIZE = 1024
 
 # USB speaker
@@ -52,9 +51,7 @@ async def handler(ws):
                 audio_bytes = base64.b64decode(data[4:])
                 audio_array = np.frombuffer(audio_bytes, dtype=np.float32).reshape(-1, AUDIO_CHANNELS)
 
-                # Apply gain
-                # GAIN = 1.5
-                # GAIN = 5.0
+                # No gain for now
                 GAIN = 1.0
                 audio_array = np.clip(audio_array * GAIN, -1.0, 1.0)
 

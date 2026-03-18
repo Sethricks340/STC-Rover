@@ -1,4 +1,4 @@
-# TODO: Almost instant, but very quiet.
+# TODO: Combine with other GUI file.
 
 import asyncio
 import websockets
