@@ -164,17 +164,11 @@ audio_stream = sd.OutputStream(
 )
 audio_stream.start()
 
-
 async def handler(ws):
     async for data in ws:
         if data.startswith("MIC:"):
             audio_bytes = base64.b64decode(data[4:])
             audio_array = np.frombuffer(audio_bytes, dtype=np.float32).reshape(-1, AUDIO_CHANNELS)
-            
-            GAIN = 3.0  
-            # apply gain and clip to avoid distortion
-            audio_array = np.clip(audio_array * GAIN, -1.0, 1.0)
-            
             await audio_queue.put(audio_array)
 
 async def main():
