@@ -4,21 +4,29 @@ import base64
 import numpy as np
 import sounddevice as sd
 import subprocess
-
-# USB speaker PCM to 100% on reboot
-subprocess.run(["amixer", "-c", "UACDemoV1.0", "set", "PCM", "100%"])
+import sounddevice as sd
 
 PORT = 8766
 AUDIO_RATE = 48000
 AUDIO_CHANNELS = 1
 BLOCKSIZE = 1024
 
-# USB speaker
+# Find USB speaker index
 speaker_index = None
 for i, dev in enumerate(sd.query_devices()):
     if "UACDemoV1.0" in dev['name']:
         speaker_index = i
         print(f"Connected to USB speaker at index {i}")
+        break
+
+# Dynamically get card number for amixer
+cards = subprocess.check_output(["aplay", "-l"]).decode()
+for line in cards.splitlines():
+    if "UACDemoV1.0" in line:
+        card_num = int(line.split(" ")[1].replace(":", ""))
+        # Set PCM volume to 100%
+        subprocess.run(["amixer", "-c", str(card_num), "set", "PCM", "100%"])
+        print(f"Set USB speaker PCM to 100% on card {card_num}")
         break
 if speaker_index is None:
     raise RuntimeError("USB speaker not found")
