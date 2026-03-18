@@ -4,23 +4,12 @@
 #   Filter out low noise
 #   Run car code on reboot
 
-# Add speaker on car
-
-import sys
-import os
-import cv2  
-import asyncio
-import serial
-import websockets
-import websocket
-import base64
+import sys, os, cv2, asyncio, websockets, websocket, base64, time
 import numpy as np
 import sounddevice as sd
-import time
-from PyQt5.QtWidgets import QApplication, QMainWindow, QWidget, QLabel, QVBoxLayout, QHBoxLayout, QCheckBox, QSlider
-from PyQt5.QtCore import Qt, QThread, pyqtSignal, QTimer, QPoint
-from PyQt5.QtGui import QPixmap, QImage, QPainter, QBrush, QColor
-
+from PyQt5.QtWidgets import QApplication, QMainWindow, QWidget, QLabel, QVBoxLayout, QHBoxLayout
+from PyQt5.QtCore import Qt, QThread, pyqtSignal
+from PyQt5.QtGui import QPixmap, QImage
 from pynput.keyboard import Key, Listener
 
 direction = "off"
@@ -28,46 +17,32 @@ speed_index = 0
 speeds = [235, 245, 255]
 speed = 235
 spin = "Counter-Clockwise"
-
 last_msg = None
-
-start_time = time.time()
-
-if os.name == 'nt':
-    print("Windows OS")
-elif os.name == 'posix':
-    print("Linux or macOS")
 
 RIGHT_MOTORS = 0
 LEFT_MOTORS = 1
 
-ws = websocket.WebSocket()
+AUDIO_RATE = 48000
+AUDIO_CHANNELS = 1
 
 ROBOT_TAILSCALE_IP = "100.94.206.108"  # Sender Pi IP
 CAM_PORT = 8765
 PI_SPEAK_PORT = 8766
 MOTOR_PORT = 8081
 
+ws = websocket.WebSocket()
+
 try:
     # Tailscale rover IP:
-    # ip_string = "ws://100.94.206.108:8081"
     ip_string = f"ws://{ROBOT_TAILSCALE_IP}:{MOTOR_PORT}"
-    # 100.94.206.108 
-    # ws.connect(ip_string)
     ws.connect(ip_string, ping_interval=20, ping_timeout=5)
     print("Controls WebSocket connected")
-    ws_connected = True
+    controls_connected = True
 except Exception as e:
     print("Controls WebSocket connection failed:", e)
-    ws_connected = False
-    # sys.exit(1) 
+    controls_connected = False
 
-AUDIO_RATE = 48000
-AUDIO_CHANNELS = 1
-
-speaker_index = sd.default.device[1]  # output device
-# print(f"{speaker_index}")
-
+speaker_index = sd.default.device[1]  # audio output device
 
 class ReconnectThread(QThread):
     status_update = pyqtSignal(bool)
@@ -78,8 +53,8 @@ class ReconnectThread(QThread):
         self.running = True
 
     def run(self):
-        global ws, ws_connected
-        while self.running and not ws_connected:
+        global ws, controls_connected
+        while self.running and not controls_connected:
             self.status_update.emit(False)  # Update label immediately
             try:
                 ws.close()
@@ -87,9 +62,8 @@ class ReconnectThread(QThread):
                 pass
             try:
                 ws = websocket.WebSocket()
-                # ws.connect(self.ip_string)
                 ws.connect(self.ip_string, ping_interval=20, ping_timeout=5)
-                ws_connected = True
+                controls_connected = True
                 self.status_update.emit(True)  # Connection successful
             except Exception as e:
                 print(f"Reconnect failed: {e}, retrying in 1 second...")
@@ -97,8 +71,6 @@ class ReconnectThread(QThread):
 
 
 class SerialThread(QThread):
-    # print(f"Opcode: {opcode}, Motor: {motor_number}, Power: {power}, PWM: {pwm}, Direction: {direction}")
-    # self.data_received.emit(x, y, reverse, dime)
     data_received = pyqtSignal(float, float, int, int)
     connection_changed = pyqtSignal(bool)
     spin_gear_changed = pyqtSignal(str, int)
@@ -137,7 +109,6 @@ class SerialThread(QThread):
 
             elif key in (Key.up, Key.down) or (hasattr(key, 'char') and key.char == 'd'):
                 direction = "off"
-                # print(direction)
                 msg = (0, 0, 0, 0)
                 if msg != last_msg:
                     self.data_received.emit(*msg)
@@ -187,6 +158,8 @@ class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("STC Rover")
+        global spin, speed
+        self.motor_opcode = 0  
 
         self.serial_thread = SerialThread()
         self.serial_thread.data_received.connect(self.control_data)
@@ -196,13 +169,7 @@ class MainWindow(QMainWindow):
         self.serial_thread.spin_gear_changed.connect(self.update_spin_gear)
 
         # Start reconnect thread if not connected
-        if not ws_connected: self.start_reconnect()
-
-        self.motor_opcode = 0  
-        self.smoothed_y = 0  # keeps track of last smoothed Y value
-        self.smoothed_turn = 0
-
-        global spin, speed
+        if not controls_connected: self.start_reconnect()
 
         # Main layout
         layout = QHBoxLayout()
@@ -222,15 +189,16 @@ class MainWindow(QMainWindow):
         """)
         layout.addWidget(self.camera_feed_label, stretch=3)
 
-        # self.handheld_status_label = QLabel("Handheld: Disconnected")
-        # self.handheld_status_label.setStyleSheet("""
-        #     QLabel {
-        #         font-size: 20px;
-        #     }
-        # """)
-        # infos_layout.addWidget(self.handheld_status_label)
+        # TODO: add logic for rover speaker label
+        self.speaker_connected_label = QLabel(f"Car Connected: placeholder")
+        self.speaker_connected_label.setStyleSheet("""
+            QLabel {
+                font-size: 20px;
+            }
+        """)
+        infos_layout.addWidget(self.speaker_connected_label)
 
-        initial_connected_message = "Connected" if ws_connected else "Disconnected"
+        initial_connected_message = "Connected" if controls_connected else "Disconnected"
         self.controls_status_label = QLabel(f"Car Connected: {initial_connected_message}")
         self.controls_status_label.setStyleSheet("""
             QLabel {
@@ -308,9 +276,9 @@ class MainWindow(QMainWindow):
             self.controls_status_label.setText("Car Connected: Disconnected")
 
     def send(self, motor, y, reverse):
-        global ws_connected, ws
+        global controls_connected, ws
         binary_msg = bytes([self.motor_opcode, motor, 1, y, reverse])
-        if not ws_connected:
+        if not controls_connected:
             return
 
         try:
@@ -318,18 +286,15 @@ class MainWindow(QMainWindow):
         # except (websocket.WebSocketConnectionClosedException, ConnectionResetError) as e:
         except Exception as e:
             print(f"WebSocket send failed: {e}")
-            ws_connected = False
+            controls_connected = False
             self.start_reconnect()  # non-blocking reconnect
 
     def control_data(self, turn, y, reverse, dime):
-        if not ws_connected:
+        if not controls_connected:
             return  # skip everything if ESP is disconnected
         
         # dime is non-zero
         if (dime): 
-            # print(f"dime1: {dime}")
-            # print(f"dime1: {0 if dime>0 else 1}")
-            # print(f"dime1: {0 if dime<0 else 1}")
             self.send(RIGHT_MOTORS, int(y), 0 if dime>0 else 1)
             self.send(LEFT_MOTORS, int(y), 0 if dime<0 else 1)
         else:
