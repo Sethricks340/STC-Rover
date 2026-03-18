@@ -3,6 +3,10 @@ import websockets
 import base64
 import numpy as np
 import sounddevice as sd
+import subprocess
+
+# USB speaker PCM to 100% on reboot
+subprocess.run(["amixer", "-c", "UACDemoV1.0", "set", "PCM", "100%"])
 
 PORT = 8766
 AUDIO_RATE = 48000
