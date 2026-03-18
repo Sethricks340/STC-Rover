@@ -43,10 +43,15 @@ LEFT_MOTORS = 1
 
 ws = websocket.WebSocket()
 
+ROBOT_TAILSCALE_IP = "100.94.206.108"  # Sender Pi IP
+CAM_PORT = 8765
+PI_SPEAK_PORT = 8766
+MOTOR_PORT = 8081
+
 try:
     # Tailscale rover IP:
-    # ip_string = "ws://100.94.206.108:8081/motors"
-    ip_string = "ws://100.94.206.108:8081"
+    # ip_string = "ws://100.94.206.108:8081"
+    ip_string = f"ws://{ROBOT_TAILSCALE_IP}:{MOTOR_PORT}"
     # 100.94.206.108 
     # ws.connect(ip_string)
     ws.connect(ip_string, ping_interval=20, ping_timeout=5)
@@ -56,9 +61,6 @@ except Exception as e:
     print("Controls WebSocket connection failed:", e)
     ws_connected = False
     # sys.exit(1) 
-
-ROBOT_TAILSCALE_IP = "100.94.206.108"  # Sender Pi IP
-PORT = 8765
 
 AUDIO_RATE = 48000
 AUDIO_CHANNELS = 1
@@ -154,7 +156,7 @@ class CameraAudioThread(QThread):
     async def websocket_loop(self):
         while True:
             try:
-                uri = f"ws://{ROBOT_TAILSCALE_IP}:{PORT}"
+                uri = f"ws://{ROBOT_TAILSCALE_IP}:{CAM_PORT}"
                 async with websockets.connect(uri) as websocket:
                     # Start audio stream
                     audio_stream = sd.OutputStream(device=speaker_index,
