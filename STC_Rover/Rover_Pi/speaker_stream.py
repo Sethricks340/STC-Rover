@@ -7,7 +7,7 @@ import sounddevice as sd
 PORT = 8766
 AUDIO_RATE = 48000
 AUDIO_CHANNELS = 1
-BLOCKSIZE = 128
+BLOCKSIZE = 512
 
 # USB speaker
 speaker_index = None
@@ -52,7 +52,7 @@ async def handler(ws):
                 audio_array = np.frombuffer(audio_bytes, dtype=np.float32).reshape(-1, AUDIO_CHANNELS)
 
                 # Apply gain
-                GAIN = 4.0
+                GAIN = 1.5
                 audio_array = np.clip(audio_array * GAIN, -1.0, 1.0)
 
                 # Keep queue very short to reduce latency
