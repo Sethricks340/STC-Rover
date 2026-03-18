@@ -88,31 +88,27 @@
 # sd.wait()
 # print("Done")
 
-
-
 import sounddevice as sd
 import numpy as np
-import base64
-import websockets
-import asyncio
 
-PI_IP = "100.94.206.108"
-PORT = 8766
 AUDIO_RATE = 48000
 AUDIO_CHANNELS = 1
+DURATION = 3  # seconds
+FREQ = 440  # Hz
 
-async def send_one_block():
-    # Record 0.5 second
-    duration = 0.5
-    recording = sd.rec(int(duration * AUDIO_RATE), samplerate=AUDIO_RATE,
-                       channels=AUDIO_CHANNELS, dtype='float32')
-    sd.wait()
-    
-    audio_bytes = recording.tobytes()
-    audio_text = base64.b64encode(audio_bytes).decode('utf-8')
-    
-    async with websockets.connect(f"ws://{PI_IP}:{PORT}") as ws:
-        await ws.send(f"MIC:{audio_text}")
-        print("Sent one audio block")
+# Find your USB speaker
+speaker_index = None
+for i, dev in enumerate(sd.query_devices()):
+    if "UACDemoV1.0" in dev['name']:
+        speaker_index = i
+        break
+if speaker_index is None:
+    raise RuntimeError("USB speaker not found")
 
-asyncio.run(send_one_block())
+t = np.linspace(0, DURATION, int(AUDIO_RATE * DURATION), endpoint=False)
+tone = (0.5 * np.sin(2 * np.pi * FREQ * t)).astype(np.float32)
+
+print("Playing tone on USB speaker...")
+sd.play(tone, samplerate=AUDIO_RATE, device=speaker_index)
+sd.wait()
+print("Done")
