@@ -22,6 +22,7 @@ speaker_index = None
 for i, dev in enumerate(sd.query_devices()):
     if "UACDemoV1.0" in dev['name']:
         speaker_index = i
+        print("Connected to UACDemoV1 speaker")
         break
 
 if speaker_index is None:
@@ -79,10 +80,8 @@ def handle_exit(signum, frame):
 signal.signal(signal.SIGINT, handle_exit)
 signal.signal(signal.SIGTERM, handle_exit)
 
-loop = asyncio.get_event_loop()
-try:
-    loop.run_until_complete(main())
-except asyncio.CancelledError:
-    pass
-finally:
-    cleanup()
+if __name__ == "__main__":
+    try:
+        asyncio.run(main())
+    except KeyboardInterrupt:
+        cleanup()
