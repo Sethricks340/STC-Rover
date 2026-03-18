@@ -1,3 +1,5 @@
+# TODO: Almost instant, but very quiet.
+
 import asyncio
 import websockets
 import base64
