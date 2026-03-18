@@ -7,7 +7,8 @@ import sounddevice as sd
 PORT = 8766
 AUDIO_RATE = 48000
 AUDIO_CHANNELS = 1
-BLOCKSIZE = 512
+# BLOCKSIZE = 512
+BLOCKSIZE = 1024
 
 # USB speaker
 speaker_index = None
