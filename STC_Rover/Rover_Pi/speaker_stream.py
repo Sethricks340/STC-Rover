@@ -120,15 +120,18 @@
 # sd.play(tone, samplerate=AUDIO_RATE, device=speaker_index)
 # sd.wait()
 # print("Done")
-import sounddevice as sd
-import numpy as np
 
+import asyncio
+import websockets
+import base64
+import numpy as np
+import sounddevice as sd
+
+PORT = 8766
 AUDIO_RATE = 48000
 AUDIO_CHANNELS = 1
-DURATION = 3  # seconds
-FREQ = 440  # Hz
 
-# Find your USB speaker
+# USB speaker
 speaker_index = None
 for i, dev in enumerate(sd.query_devices()):
     if "UACDemoV1.0" in dev['name']:
@@ -137,10 +140,40 @@ for i, dev in enumerate(sd.query_devices()):
 if speaker_index is None:
     raise RuntimeError("USB speaker not found")
 
-t = np.linspace(0, DURATION, int(AUDIO_RATE * DURATION), endpoint=False)
-tone = (0.5 * np.sin(2 * np.pi * FREQ * t)).astype(np.float32)
+# Audio queue
+audio_queue = asyncio.Queue()
 
-print("Playing tone on USB speaker...")
-sd.play(tone, samplerate=AUDIO_RATE, device=speaker_index)
-sd.wait()
-print("Done")
+def audio_callback(outdata, frames, time, status):
+    try:
+        chunk = audio_queue.get_nowait()
+        if len(chunk) < frames:
+            outdata[:len(chunk)] = chunk
+            outdata[len(chunk):] = 0
+        else:
+            outdata[:] = chunk[:frames]
+    except asyncio.QueueEmpty:
+        outdata[:] = 0
+
+audio_stream = sd.OutputStream(
+    device=speaker_index,
+    samplerate=AUDIO_RATE,
+    channels=AUDIO_CHANNELS,
+    dtype='float32',
+    blocksize=1024,
+    callback=audio_callback
+)
+audio_stream.start()
+
+async def handler(ws):
+    async for data in ws:
+        if data.startswith("MIC:"):
+            audio_bytes = base64.b64decode(data[4:])
+            audio_array = np.frombuffer(audio_bytes, dtype=np.float32).reshape(-1, AUDIO_CHANNELS)
+            await audio_queue.put(audio_array)
+
+async def main():
+    async with websockets.serve(handler, "0.0.0.0", PORT, ping_interval=None):
+        print(f"Streaming server running on ws://0.0.0.0:{PORT}")
+        await asyncio.Future()
+
+asyncio.run(main())
