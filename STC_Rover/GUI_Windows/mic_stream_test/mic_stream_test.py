@@ -69,46 +69,21 @@
 
 
 
-
-
-
-
-import asyncio
-import websockets
-import base64
 import sounddevice as sd
+import numpy as np
 
-PI_IP = "100.94.206.108"  # Pi Tailscale IP
-PORT = 8766
 AUDIO_RATE = 48000
 AUDIO_CHANNELS = 1
-AUDIO_BLOCKSIZE = 1024
+DURATION = 5  # seconds
 
-async def send_audio():
-    audio_queue = asyncio.Queue()
-    
-    def audio_callback(indata, frames, time, status):
-        audio_queue.put_nowait(indata.copy().tobytes())
+print("Recording 5 seconds from default mic...")
+recording = sd.rec(int(DURATION * AUDIO_RATE),
+                   samplerate=AUDIO_RATE,
+                   channels=AUDIO_CHANNELS,
+                   dtype='float32')  # default device
+sd.wait()
 
-    stream = sd.InputStream(samplerate=AUDIO_RATE,
-                            channels=AUDIO_CHANNELS,
-                            blocksize=AUDIO_BLOCKSIZE,
-                            callback=audio_callback)
-    stream.start()
-
-    async with websockets.connect(f"ws://{PI_IP}:{PORT}") as websocket:
-        print(f"Connected to Pi at ws://{PI_IP}:{PORT}")
-
-        try:
-            while True:
-                audio_bytes = await audio_queue.get()
-                audio_text = base64.b64encode(audio_bytes).decode('utf-8')
-                await websocket.send(f"MIC:{audio_text}")
-        except websockets.exceptions.ConnectionClosed:
-            print("Connection closed")
-        finally:
-            stream.stop()
-            stream.close()
-
-if __name__ == "__main__":
-    asyncio.run(send_audio())
+print("Playback...")
+sd.play(recording, samplerate=AUDIO_RATE)
+sd.wait()
+print("Done")
