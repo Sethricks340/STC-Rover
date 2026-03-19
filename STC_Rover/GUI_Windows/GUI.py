@@ -3,6 +3,10 @@
 #   Crashes if server disconnects? (new issue)
 #   Filter out low noise from camera mic
 #   Run car code on reboot
+#   Double mic connection?
+#   Better Camera Quality without huge delay?
+#   Integrate camera controls?
+#   Make chasis
 
 import sys, os, cv2, asyncio, websockets, websocket, base64, time
 import numpy as np
