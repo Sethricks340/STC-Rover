@@ -1,10 +1,9 @@
 # TODO:
 #   Closing out GUI (x on tab) causes stall. Ctrl+C works in terminal to close it. 
 #   Crashes if server disconnects? (new issue)
-#   Filter out low noise
+#   Filter out low noise from camera mic
 #   Run car code on reboot
-#   Speaker thread doesn't try to reconnect
-#   Combine speaker logic in here
+#   Speaker thread doesn't try to reconnect?
 
 import sys, os, cv2, asyncio, websockets, websocket, base64, time
 import numpy as np
@@ -155,6 +154,51 @@ class SerialThread(QThread):
         with Listener(on_press=on_press, on_release=on_release) as listener:
             listener.join()
 
+# --- Thread to send audio data from mic ---
+class MicStreamThread(QThread):
+    def __init__(self, pi_ip, port, samplerate=48000, channels=1, blocksize=2048):
+        super().__init__()
+        self.pi_ip = pi_ip
+        self.port = port
+        self.samplerate = samplerate
+        self.channels = channels
+        self.blocksize = blocksize
+        self.running = True
+
+    def run(self):
+        asyncio.run(self.websocket_loop())
+
+    async def websocket_loop(self):
+        audio_queue = asyncio.Queue()
+
+        # Audio callback
+        def audio_callback(indata, frames, time, status):
+            audio_queue.put_nowait(indata.copy().tobytes())
+
+        stream = sd.InputStream(
+            samplerate=self.samplerate,
+            channels=self.channels,
+            blocksize=self.blocksize,
+            dtype='float32',
+            callback=audio_callback
+        )
+        stream.start()
+
+        while self.running:
+            try:
+                async with websockets.connect(f"ws://{self.pi_ip}:{self.port}") as ws:
+                    print(f"Connected to Pi mic at ws://{self.pi_ip}:{self.port}")
+                    while self.running:
+                        if not audio_queue.empty():
+                            audio_bytes = await audio_queue.get()
+                            audio_text = base64.b64encode(audio_bytes).decode('utf-8')
+                            await ws.send(f"MIC:{audio_text}")
+                        else:
+                            await asyncio.sleep(0.005)
+            except (ConnectionRefusedError, OSError, websockets.exceptions.ConnectionClosed):
+                print(f"Speaker reconnect failed, retrying in 2s...")
+                await asyncio.sleep(2)
+
 # --- Thread to receive camera + audio ---
 class CameraAudioThread(QThread):
     frame_received = pyqtSignal(np.ndarray)
@@ -205,6 +249,9 @@ class MainWindow(QMainWindow):
         self.controls_reconnect_thread = None  # track if controls reconnection thread is active
         self.cam_reconnect_thread = None  # track if controls reconnection thread is active
         self.serial_thread.spin_gear_changed.connect(self.update_spin_gear)
+
+        self.mic_thread = MicStreamThread(ROBOT_TAILSCALE_IP, PI_SPEAK_PORT)
+        self.mic_thread.start()
 
         # Start reconnect thread if not connected
         if not controls_connected: self.start_reconnect()
@@ -286,6 +333,10 @@ class MainWindow(QMainWindow):
         self.cam_thread.running = False
         self.cam_thread.quit()
         self.cam_thread.wait()
+
+        self.mic_thread.running = False
+        self.mic_thread.quit()
+        self.mic_thread.wait()
         event.accept()
 
     def start_reconnect(self):
