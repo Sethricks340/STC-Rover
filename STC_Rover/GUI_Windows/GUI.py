@@ -242,6 +242,7 @@ class CameraAudioThread(QThread):
 
                             audio_stream.write(audio_array)
             except (ConnectionRefusedError, OSError, websockets.exceptions.ConnectionClosed):
+                print(f"Camera/Mic reconnect failed, retrying in 2s...")
                 await asyncio.sleep(2)
 
 # --- GUI ---
@@ -283,7 +284,6 @@ class MainWindow(QMainWindow):
         """)
         layout.addWidget(self.camera_feed_label, stretch=3)
 
-        # TODO: add logic for rover speaker label
         initial_speak_connected_message = "Connected" if speaker_connected else "Disconnected"
         self.speaker_connected_label = QLabel(f"Speaker: {initial_speak_connected_message}")
         self.speaker_connected_label.setStyleSheet("""
@@ -361,7 +361,7 @@ class MainWindow(QMainWindow):
             # Speaker reconnect
             self.cam_reconnect_thread = ReconnectThread("speaker_ws", speak_ip_string, 1.0)
             self.cam_reconnect_thread.start()
-            self.cam_reconnect_thread.speaker_status_update.connect(self.update_speaker_status) # TODO: change to speaker status 
+            self.cam_reconnect_thread.speaker_status_update.connect(self.update_speaker_status) 
 
     def update_spin_gear(self, spin_val, gear_index):
         self.spin_label.setText(f"Spin: {spin_val}")

@@ -1,12 +1,27 @@
+# TODO: find camera dynamically
+
+
+# This error if can't find it: (not plugged in)
+# [ERROR:0@54.131] global obsensor_uvc_stream_channel.cpp:163 getStreamChannelGroup Camera index out of range
+# Cannot open camera
+# [ WARN:0@56.337] global cap_v4l.cpp:914 open VIDEOIO(V4L2:/dev/video0): can't open camera by index
+# [video4linux2,v4l2 @ 0x30be1c60] Not a video capture device.
+# [video4linux2,v4l2 @ 0x30be1c60] Not a video capture device.
+# [video4linux2,v4l2 @ 0x30be1c60] Not a video capture device.
+# [video4linux2,v4l2 @ 0x30be1c60] Not a video capture device.
+# [video4linux2,v4l2 @ 0x30be1c60] Not a video capture device.
+# [video4linux2,v4l2 @ 0x30be1c60] Not a video capture device.
+# [video4linux2,v4l2 @ 0x30be1c60] Not a video capture device.
+# [video4linux2,v4l2 @ 0x30be1c60] Not a video capture device.
+# [video4linux2,v4l2 @ 0x30be1c60] Not a video capture device.
+# [video4linux2,v4l2 @ 0x30be1c60] ioctl(VIDIOC_G_INPUT): Inappropriate ioctl for device
+
+
 import cv2
 import asyncio
 import websockets
 import base64
-import numpy as np
 import sounddevice as sd
-import time
-
-# video_start_time = audio_start_time = time.time()
 
 TAILSCALE_IP = "100.94.206.108"  # Sender Pi Tailscale IP
 PORT = 8765
@@ -17,6 +32,7 @@ AUDIO_CHANNELS = 1
 AUDIO_BLOCKSIZE = 1024
 
 # Select devices
+# TODO: find camera dynamically
 mic_index = 1  # Replace with index of Logitech C270 mic from sd.query_devices()
 camera_index = 0  # Usually 0 for the first USB camera
 
@@ -50,7 +66,6 @@ async def send_camera_audio(websocket):
             # Send video
             ret, frame = cap.read()
             if ret:
-                # _, buffer = cv2.imencode('.jpg', frame)
                 _, buffer = cv2.imencode('.jpg', frame, [cv2.IMWRITE_JPEG_QUALITY, 40])
                 jpg_text = base64.b64encode(buffer).decode('utf-8')
                 await websocket.send(f"VID:{jpg_text}")
@@ -61,8 +76,6 @@ async def send_camera_audio(websocket):
                 audio_text = base64.b64encode(audio_bytes).decode('utf-8')
                 await websocket.send(f"AUD:{audio_text}")
 
-            # await asyncio.sleep(0.01)
-            # await asyncio.sleep(0.05)
             await asyncio.sleep(0.2)
     except websockets.exceptions.ConnectionClosed:
         print("Client disconnected")
