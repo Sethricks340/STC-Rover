@@ -1,9 +1,8 @@
 # TODO:
-#   Closing out GUI (x on tab) causes stall. Ctrl+C works in terminal to close it. 
+#   Closing out GUI (x on tab) causes stall. Ctrl+C doesn't work either. Only the garbage terminal icon
 #   Crashes if server disconnects? (new issue)
 #   Filter out low noise from camera mic
 #   Run car code on reboot
-#   Speaker thread doesn't try to reconnect?
 
 import sys, os, cv2, asyncio, websockets, websocket, base64, time
 import numpy as np
@@ -62,7 +61,7 @@ class ReconnectThread(QThread):
 
     def __init__(self, ws_name: str, ip_string: str, check_interval: float = 1.0):
         super().__init__()
-        self.ws_name = ws_name  # must be the string name of the global websocket
+        self.ws_name = ws_name
         self.ip_string = ip_string
         self.check_interval = check_interval
         self.running = True
@@ -72,39 +71,42 @@ class ReconnectThread(QThread):
         while self.running:
             ws_obj = globals()[self.ws_name]
 
-            # Check if socket is dead
-            sock_dead = not ws_obj.sock or ws_obj.sock.fileno() == -1
-            if sock_dead:
-                # mark disconnected
+            # Try sending a ping to detect connection alive
+            is_connected = True
+            try:
+                ws_obj.send("PING", opcode=websocket.ABNF.OPCODE_TEXT)
+            except:
+                is_connected = False
+
+            if not is_connected:
                 if self.ws_name == "motor_ws":
                     controls_connected = False
                 else:
                     speaker_connected = False
-
                 self.status_update.emit(False)
-                try:
+
+                # Attempt reconnect
+                while self.running and not is_connected:
                     try:
-                        ws_obj.close()
-                    except:
-                        pass
-
-                    # create new socket and connect
-                    new_ws = websocket.WebSocket()
-                    new_ws.connect(self.ip_string, ping_interval=20, ping_timeout=5)
-                    globals()[self.ws_name] = new_ws
-
-                    # mark connected
-                    if self.ws_name == "motor_ws":
-                        controls_connected = True
-                    else:
-                        speaker_connected = True
-
-                    self.status_update.emit(True)
-                    print(f"{self.ws_name} reconnected successfully!")
-
-                except Exception as e:
-                    print(f"Reconnect failed for {self.ip_string}: {e}")
-                    time.sleep(self.check_interval)
+                        try:
+                            ws_obj.close()
+                        except:
+                            pass
+                        new_ws = websocket.WebSocket()
+                        new_ws.connect(self.ip_string, ping_interval=20, ping_timeout=5)
+                        globals()[self.ws_name] = new_ws
+                        is_connected = True
+                        if self.ws_name == "motor_ws":
+                            controls_connected = True
+                        else:
+                            speaker_connected = True
+                        self.status_update.emit(True)
+                        print(f"{self.ws_name} reconnected successfully!")
+                    except Exception as e:
+                        print(f"Reconnect failed for {self.ip_string}: {e}")
+                        await_time = self.check_interval
+                        # shorter sleep so it retries faster
+                        time.sleep(await_time)
             else:
                 time.sleep(self.check_interval)
 
