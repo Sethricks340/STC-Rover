@@ -3,6 +3,8 @@
 #   Crashes if server disconnects? (new issue)
 #   Filter out low noise
 #   Run car code on reboot
+#   Speaker thread doesn't try to reconnect
+#   Combine speaker logic in here
 
 import sys, os, cv2, asyncio, websockets, websocket, base64, time
 import numpy as np
@@ -24,55 +26,91 @@ LEFT_MOTORS = 1
 
 AUDIO_RATE = 48000
 AUDIO_CHANNELS = 1
+BLOCKSIZE = 2048 # For car speaker
 
 ROBOT_TAILSCALE_IP = "100.94.206.108"  # Sender Pi IP
 CAM_PORT = 8765
 PI_SPEAK_PORT = 8766
 MOTOR_PORT = 8081
 
-ws = websocket.WebSocket()
+motor_ws = websocket.WebSocket()
+speaker_ws = websocket.WebSocket()
 
 try:
     # Tailscale rover IP:
-    ip_string = f"ws://{ROBOT_TAILSCALE_IP}:{MOTOR_PORT}"
-    ws.connect(ip_string, ping_interval=20, ping_timeout=5)
+    motor_ip_string = f"ws://{ROBOT_TAILSCALE_IP}:{MOTOR_PORT}"
+    motor_ws.connect(motor_ip_string, ping_interval=20, ping_timeout=5)
     print("Controls WebSocket connected")
     controls_connected = True
 except Exception as e:
     print("Controls WebSocket connection failed:", e)
     controls_connected = False
 
+try:
+    # Tailscale rover IP:
+    speak_ip_string = f"ws://{ROBOT_TAILSCALE_IP}:{PI_SPEAK_PORT}"
+    speaker_ws.connect(speak_ip_string, ping_interval=20, ping_timeout=5)
+    print("Speaker WebSocket connected")
+    speaker_connected = True
+except Exception as e:
+    print("Speaker WebSocket connection failed:", e)
+    speaker_connected = False
+
 speaker_index = sd.default.device[1]  # audio output device
 
 class ReconnectThread(QThread):
     status_update = pyqtSignal(bool)
 
-    def __init__(self, ip_string):
+    def __init__(self, ws_name: str, ip_string: str, check_interval: float = 1.0):
         super().__init__()
+        self.ws_name = ws_name  # must be the string name of the global websocket
         self.ip_string = ip_string
+        self.check_interval = check_interval
         self.running = True
 
     def run(self):
-        global ws, controls_connected
-        while self.running and not controls_connected:
-            self.status_update.emit(False)  # Update label immediately
-            try:
-                ws.close()
-            except:
-                pass
-            try:
-                ws = websocket.WebSocket()
-                ws.connect(self.ip_string, ping_interval=20, ping_timeout=5)
-                controls_connected = True
-                self.status_update.emit(True)  # Connection successful
-            except Exception as e:
-                print(f"Reconnect failed: {e}, retrying in 1 second...")
-                time.sleep(1)
+        global motor_ws, speaker_ws, controls_connected, speaker_connected
+        while self.running:
+            ws_obj = globals()[self.ws_name]
 
+            # Check if socket is dead
+            sock_dead = not ws_obj.sock or ws_obj.sock.fileno() == -1
+            if sock_dead:
+                # mark disconnected
+                if self.ws_name == "motor_ws":
+                    controls_connected = False
+                else:
+                    speaker_connected = False
+
+                self.status_update.emit(False)
+                try:
+                    try:
+                        ws_obj.close()
+                    except:
+                        pass
+
+                    # create new socket and connect
+                    new_ws = websocket.WebSocket()
+                    new_ws.connect(self.ip_string, ping_interval=20, ping_timeout=5)
+                    globals()[self.ws_name] = new_ws
+
+                    # mark connected
+                    if self.ws_name == "motor_ws":
+                        controls_connected = True
+                    else:
+                        speaker_connected = True
+
+                    self.status_update.emit(True)
+                    print(f"{self.ws_name} reconnected successfully!")
+
+                except Exception as e:
+                    print(f"Reconnect failed for {self.ip_string}: {e}")
+                    time.sleep(self.check_interval)
+            else:
+                time.sleep(self.check_interval)
 
 class SerialThread(QThread):
     data_received = pyqtSignal(float, float, int, int)
-    connection_changed = pyqtSignal(bool)
     spin_gear_changed = pyqtSignal(str, int)
 
     def run(self):
@@ -163,9 +201,9 @@ class MainWindow(QMainWindow):
 
         self.serial_thread = SerialThread()
         self.serial_thread.data_received.connect(self.control_data)
-        self.serial_thread.connection_changed.connect(self.update_handheld_status)
         self.serial_thread.start()
-        self.reconnect_thread = None  # track if reconnection thread is active
+        self.controls_reconnect_thread = None  # track if controls reconnection thread is active
+        self.cam_reconnect_thread = None  # track if controls reconnection thread is active
         self.serial_thread.spin_gear_changed.connect(self.update_spin_gear)
 
         # Start reconnect thread if not connected
@@ -190,7 +228,7 @@ class MainWindow(QMainWindow):
         layout.addWidget(self.camera_feed_label, stretch=3)
 
         # TODO: add logic for rover speaker label
-        self.speaker_connected_label = QLabel(f"Car Connected: placeholder")
+        self.speaker_connected_label = QLabel(f"Speaker: Placeholder")
         self.speaker_connected_label.setStyleSheet("""
             QLabel {
                 font-size: 20px;
@@ -199,7 +237,7 @@ class MainWindow(QMainWindow):
         infos_layout.addWidget(self.speaker_connected_label)
 
         initial_connected_message = "Connected" if controls_connected else "Disconnected"
-        self.controls_status_label = QLabel(f"Car Connected: {initial_connected_message}")
+        self.controls_status_label = QLabel(f"Controls: {initial_connected_message}")
         self.controls_status_label.setStyleSheet("""
             QLabel {
                 font-size: 20px;
@@ -252,38 +290,36 @@ class MainWindow(QMainWindow):
 
     def start_reconnect(self):
         # Only start if no thread exists or the previous one stopped
-        if self.reconnect_thread is None or not self.reconnect_thread.isRunning():
-            self.reconnect_thread = ReconnectThread(ip_string)
-            self.reconnect_thread.status_update.connect(self.update_car_status)
-            self.reconnect_thread.start()
+        if self.controls_reconnect_thread is None or not self.controls_reconnect_thread.isRunning():
+            # Motor reconnect
+            self.controls_reconnect_thread = ReconnectThread("motor_ws", motor_ip_string, 1.0)
+            self.controls_reconnect_thread.start()
+            self.controls_reconnect_thread.status_update.connect(self.update_car_status)
+
+        if self.cam_reconnect_thread is None or not self.cam_reconnect_thread.isRunning():
+            # Speaker reconnect
+            self.cam_reconnect_thread = ReconnectThread("speaker_ws", speak_ip_string, 1.0)
+            self.cam_reconnect_thread.start()
+            # self.cam_reconnect_thread.status_update.connect(self.update_car_status) # TODO: change to speaker status 
 
     def update_spin_gear(self, spin_val, gear_index):
         self.spin_label.setText(f"Spin: {spin_val}")
         self.gear_label.setText(f"Gear: {gear_index + 1}")
 
-    def update_handheld_status(self, connected: bool):
-        if connected:
-            self.handheld_status_label.setText("Handheld: Connected")
-        else:
-            self.handheld_status_label.setText("Handheld: Disconnected")
-            self.send(RIGHT_MOTORS, 0, 0)   # Turn off motors if handheld disconnected
-            self.send(LEFT_MOTORS, 0, 0)    # Turn off motors if handheld disconnected
-
     def update_car_status(self, connected: bool):
         if connected:
-            self.controls_status_label.setText("Car Connected: Connected")
+            self.controls_status_label.setText("Controls: Connected")
         else:
-            self.controls_status_label.setText("Car Connected: Disconnected")
+            self.controls_status_label.setText("Controls: Disconnected")
 
     def send(self, motor, y, reverse):
-        global controls_connected, ws
+        global controls_connected, motor_ws
         binary_msg = bytes([self.motor_opcode, motor, 1, y, reverse])
         if not controls_connected:
             return
 
         try:
-            ws.send(binary_msg, opcode=websocket.ABNF.OPCODE_BINARY)
-        # except (websocket.WebSocketConnectionClosedException, ConnectionResetError) as e:
+            motor_ws.send(binary_msg, opcode=websocket.ABNF.OPCODE_BINARY)
         except Exception as e:
             print(f"WebSocket send failed: {e}")
             controls_connected = False
@@ -305,4 +341,4 @@ app = QApplication(sys.argv)
 window = MainWindow()
 window.showFullScreen()
 app.exec()
-ws.close()
+motor_ws.close()
