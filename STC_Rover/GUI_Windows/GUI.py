@@ -61,7 +61,8 @@ except Exception as e:
 speaker_index = sd.default.device[1]  # audio output device
 
 class ReconnectThread(QThread):
-    status_update = pyqtSignal(bool)
+    controls_status_update = pyqtSignal(bool)
+    speaker_status_update = pyqtSignal(bool)
 
     def __init__(self, ws_name: str, ip_string: str, check_interval: float = 1.0):
         super().__init__()
@@ -85,9 +86,10 @@ class ReconnectThread(QThread):
             if not is_connected:
                 if self.ws_name == "motor_ws":
                     controls_connected = False
+                    self.controls_status_update.emit(False)
                 else:
                     speaker_connected = False
-                self.status_update.emit(False)
+                    self.speaker_status_update.emit(False)
 
                 # Attempt reconnect
                 while self.running and not is_connected:
@@ -102,9 +104,10 @@ class ReconnectThread(QThread):
                         is_connected = True
                         if self.ws_name == "motor_ws":
                             controls_connected = True
+                            self.controls_status_update.emit(True)
                         else:
                             speaker_connected = True
-                        self.status_update.emit(True)
+                            self.speaker_status_update.emit(True)
                         print(f"{self.ws_name} reconnected successfully!")
                     except Exception as e:
                         print(f"Reconnect failed for {self.ip_string}: {e}")
@@ -281,7 +284,8 @@ class MainWindow(QMainWindow):
         layout.addWidget(self.camera_feed_label, stretch=3)
 
         # TODO: add logic for rover speaker label
-        self.speaker_connected_label = QLabel(f"Speaker: Placeholder")
+        initial_speak_connected_message = "Connected" if speaker_connected else "Disconnected"
+        self.speaker_connected_label = QLabel(f"Speaker: {initial_speak_connected_message}")
         self.speaker_connected_label.setStyleSheet("""
             QLabel {
                 font-size: 20px;
@@ -289,8 +293,8 @@ class MainWindow(QMainWindow):
         """)
         infos_layout.addWidget(self.speaker_connected_label)
 
-        initial_connected_message = "Connected" if controls_connected else "Disconnected"
-        self.controls_status_label = QLabel(f"Controls: {initial_connected_message}")
+        initial_controls_connected_message = "Connected" if controls_connected else "Disconnected"
+        self.controls_status_label = QLabel(f"Controls: {initial_controls_connected_message}")
         self.controls_status_label.setStyleSheet("""
             QLabel {
                 font-size: 20px;
@@ -351,23 +355,28 @@ class MainWindow(QMainWindow):
             # Motor reconnect
             self.controls_reconnect_thread = ReconnectThread("motor_ws", motor_ip_string, 1.0)
             self.controls_reconnect_thread.start()
-            self.controls_reconnect_thread.status_update.connect(self.update_car_status)
+            self.controls_reconnect_thread.controls_status_update.connect(self.update_controls_status)
 
         if self.cam_reconnect_thread is None or not self.cam_reconnect_thread.isRunning():
             # Speaker reconnect
             self.cam_reconnect_thread = ReconnectThread("speaker_ws", speak_ip_string, 1.0)
             self.cam_reconnect_thread.start()
-            # self.cam_reconnect_thread.status_update.connect(self.update_car_status) # TODO: change to speaker status 
+            self.cam_reconnect_thread.speaker_status_update.connect(self.update_speaker_status) # TODO: change to speaker status 
 
     def update_spin_gear(self, spin_val, gear_index):
         self.spin_label.setText(f"Spin: {spin_val}")
         self.gear_label.setText(f"Gear: {gear_index + 1}")
 
-    def update_car_status(self, connected: bool):
+    def update_controls_status(self, connected: bool):
         if connected:
             self.controls_status_label.setText("Controls: Connected")
         else:
             self.controls_status_label.setText("Controls: Disconnected")
+    def update_speaker_status(self, connected: bool):
+        if connected:
+            self.speaker_connected_label.setText("Speaker: Connected")
+        else:
+            self.speaker_connected_label.setText("Speaker: Disconnected")
 
     def send(self, motor, y, reverse):
         global controls_connected, motor_ws
