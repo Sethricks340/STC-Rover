@@ -260,7 +260,7 @@ class MainWindow(QMainWindow):
         self.cam_reconnect_thread = None  # track if controls reconnection thread is active
         self.serial_thread.spin_gear_changed.connect(self.update_spin_gear)
 
-        self.mic_thread = MicStreamThread(ROBOT_TAILSCALE_IP, PI_SPEAK_PORT)
+        self.mic_thread = MicStreamThread(ROBOT_TAILSCALE_IP, PI_SPEAK_PORT, blocksize=BLOCKSIZE)
         self.mic_thread.start()
 
         # Start reconnect thread if not connected
