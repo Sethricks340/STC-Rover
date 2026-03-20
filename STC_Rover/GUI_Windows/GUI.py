@@ -22,6 +22,7 @@ speeds = [235, 245, 255]
 speed = 235
 spin = "Counter-Clockwise"
 last_msg = None
+mic_enable = False
 
 RIGHT_MOTORS = 0
 LEFT_MOTORS = 1
@@ -119,12 +120,14 @@ class ReconnectThread(QThread):
 
 class SerialThread(QThread):
     data_received = pyqtSignal(float, float, int, int)
+    mic_change = pyqtSignal(bool)
     spin_gear_changed = pyqtSignal(str, int)
 
     def run(self):
 
         def on_press(key):
             global direction, spin, speed, speed_index, last_msg
+            global mic_enable
 
             msg = None
             if key == Key.up:
@@ -136,6 +139,9 @@ class SerialThread(QThread):
             elif hasattr(key, 'char') and key.char == 'd':
                 direction = 1 if spin == "Clockwise" else -1
                 msg = (0, speed, 0, direction)
+            elif key == Key.space and not mic_enable:
+                mic_enable = True
+                self.mic_change.emit(mic_enable)
 
             if msg != last_msg and msg is not None:
                 self.data_received.emit(*msg)
@@ -143,6 +149,7 @@ class SerialThread(QThread):
 
         def on_release(key):
             global direction, spin, speed, speed_index, last_msg
+            global mic_enable
             
             if hasattr(key, 'char') and key.char == 's':
                 spin = "Clockwise" if spin == "Counter-Clockwise" else "Counter-Clockwise"
@@ -160,6 +167,10 @@ class SerialThread(QThread):
                     self.data_received.emit(*msg)
                     last_msg = msg
 
+            elif key == Key.space and mic_enable:
+                mic_enable = False
+                self.mic_change.emit(mic_enable)
+
         with Listener(on_press=on_press, on_release=on_release) as listener:
             listener.join()
 
@@ -173,6 +184,11 @@ class MicStreamThread(QThread):
         self.channels = channels
         self.blocksize = blocksize
         self.running = True
+        self.mic_enable = False
+
+    def enable_disable_mic(self, mic_enable):
+        self.mic_enable = mic_enable
+        print(f"self.mic_enable: {self.mic_enable}")
 
     def run(self):
         asyncio.run(self.websocket_loop())
@@ -262,6 +278,7 @@ class MainWindow(QMainWindow):
 
         self.mic_thread = MicStreamThread(ROBOT_TAILSCALE_IP, PI_SPEAK_PORT, blocksize=BLOCKSIZE)
         self.mic_thread.start()
+        self.serial_thread.mic_change.connect(self.mic_thread.enable_disable_mic) # TODO: connect this to a function to disable the speaker
 
         # Start reconnect thread if not connected
         if not controls_connected: self.start_reconnect()
