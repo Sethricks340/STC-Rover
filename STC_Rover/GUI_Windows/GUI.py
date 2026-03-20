@@ -12,7 +12,7 @@ import sys, os, cv2, asyncio, websockets, websocket, base64, time
 import numpy as np
 import sounddevice as sd
 from PyQt5.QtWidgets import QApplication, QMainWindow, QWidget, QLabel, QVBoxLayout, QHBoxLayout
-from PyQt5.QtCore import Qt, QThread, pyqtSignal
+from PyQt5.QtCore import Qt, QThread, pyqtSignal, QTimer
 from PyQt5.QtGui import QPixmap, QImage
 from pynput.keyboard import Key, Listener
 
@@ -236,7 +236,12 @@ class CameraAudioThread(QThread):
         asyncio.run(self.websocket_loop())
 
     def enable_disable_audio(self, speaker_enabled):
-        self.speaker_enabled = not speaker_enabled
+        if speaker_enabled:
+            # Mic is enabled = immediately disable speaker
+            self.speaker_enabled = False
+        else:
+            # If mic was disabled, turn speaker back on after 1 second to avoid feedback with delay
+            QTimer.singleShot(1000, lambda: setattr(self, 'speaker_enabled', True))
 
     async def websocket_loop(self):
         while True:
