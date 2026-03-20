@@ -279,6 +279,7 @@ class MainWindow(QMainWindow):
         self.mic_thread = MicStreamThread(ROBOT_TAILSCALE_IP, PI_SPEAK_PORT, blocksize=BLOCKSIZE)
         self.mic_thread.start()
         self.serial_thread.mic_change.connect(self.mic_thread.enable_disable_mic) # TODO: connect this to a function to disable the speaker
+        self.serial_thread.mic_change.connect(self.update_mic_label)
 
         # Start reconnect thread if not connected
         if not controls_connected: self.start_reconnect()
@@ -318,6 +319,14 @@ class MainWindow(QMainWindow):
             }
         """)
         infos_layout.addWidget(self.controls_status_label)
+
+        self.mic_status_label = QLabel("Mic: Disabled")
+        self.mic_status_label.setStyleSheet("""
+            QLabel {
+                font-size: 20px;
+            }
+        """)
+        infos_layout.addWidget(self.mic_status_label)
         
         self.spin_label = QLabel(f"Spin: {spin}")
         self.spin_label.setStyleSheet("""
@@ -346,6 +355,12 @@ class MainWindow(QMainWindow):
         self.cam_thread = CameraAudioThread()
         self.cam_thread.frame_received.connect(self.update_camera)
         self.cam_thread.start()
+
+    def update_mic_label(self, mic_enabled):
+        if mic_enabled:
+            self.mic_status_label.setText("Mic: Enabled")
+        else:
+            self.mic_status_label.setText("Mic: Disabled")
 
     def update_camera(self, frame):
         # Convert BGR to RGB
