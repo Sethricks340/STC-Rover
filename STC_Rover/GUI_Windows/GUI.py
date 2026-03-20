@@ -188,7 +188,6 @@ class MicStreamThread(QThread):
 
     def enable_disable_mic(self, mic_enable):
         self.mic_enable = mic_enable
-        print(f"self.mic_enable: {self.mic_enable}")
 
     def run(self):
         asyncio.run(self.websocket_loop())
@@ -198,7 +197,8 @@ class MicStreamThread(QThread):
 
         # Audio callback
         def audio_callback(indata, frames, time, status):
-            audio_queue.put_nowait(indata.copy().tobytes())
+            if self.mic_enable:  # only put audio in queue if mic is enabled
+                audio_queue.put_nowait(indata.copy().tobytes())
 
         stream = sd.InputStream(
             samplerate=self.samplerate,
@@ -227,9 +227,16 @@ class MicStreamThread(QThread):
 # --- Thread to receive camera + audio ---
 class CameraAudioThread(QThread):
     frame_received = pyqtSignal(np.ndarray)
+    
+    def __init__(self):
+        super().__init__()
+        self.speaker_enabled = True  # allow audio playback
 
     def run(self):
         asyncio.run(self.websocket_loop())
+
+    def enable_disable_audio(self, speaker_enabled):
+        self.speaker_enabled = not speaker_enabled
 
     async def websocket_loop(self):
         while True:
@@ -249,7 +256,7 @@ class CameraAudioThread(QThread):
                             nparr = np.frombuffer(jpg_original, np.uint8)
                             frame = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
                             self.frame_received.emit(frame)
-                        elif data.startswith("AUD:"):
+                        elif data.startswith("AUD:") and self.speaker_enabled:
                             audio_bytes = base64.b64decode(data[4:])
                             audio_array = np.frombuffer(audio_bytes, dtype=np.float32)
 
@@ -278,7 +285,7 @@ class MainWindow(QMainWindow):
 
         self.mic_thread = MicStreamThread(ROBOT_TAILSCALE_IP, PI_SPEAK_PORT, blocksize=BLOCKSIZE)
         self.mic_thread.start()
-        self.serial_thread.mic_change.connect(self.mic_thread.enable_disable_mic) # TODO: connect this to a function to disable the speaker
+        self.serial_thread.mic_change.connect(self.mic_thread.enable_disable_mic) 
         self.serial_thread.mic_change.connect(self.update_mic_label)
 
         # Start reconnect thread if not connected
@@ -354,6 +361,7 @@ class MainWindow(QMainWindow):
         # Start camera/audio thread
         self.cam_thread = CameraAudioThread()
         self.cam_thread.frame_received.connect(self.update_camera)
+        self.serial_thread.mic_change.connect(self.cam_thread.enable_disable_audio) 
         self.cam_thread.start()
 
     def update_mic_label(self, mic_enabled):
