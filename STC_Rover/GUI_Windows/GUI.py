@@ -20,7 +20,7 @@ direction = "off"
 speed_index = 0
 speeds = [235, 245, 255]
 speed = 235
-spin = "Counter-Clockwise"
+spin = "Clockwise"
 last_msg = None
 mic_enable = False
 
@@ -137,7 +137,7 @@ class SerialThread(QThread):
                 direction = "backwards"
                 msg = (0, speed, 1, 0)
             elif hasattr(key, 'char') and key.char == 'd':
-                direction = 1 if spin == "Clockwise" else -1
+                direction = 1 if spin == "Counter-Clockwise" else -1
                 msg = (0, speed, 0, direction)
             elif key == Key.space and not mic_enable:
                 mic_enable = True
@@ -152,7 +152,7 @@ class SerialThread(QThread):
             global mic_enable
             
             if hasattr(key, 'char') and key.char == 's':
-                spin = "Clockwise" if spin == "Counter-Clockwise" else "Counter-Clockwise"
+                spin = "Counter-Clockwise" if spin == "Clockwise" else "Clockwise"
                 self.spin_gear_changed.emit(spin, speed_index)
 
             elif hasattr(key, 'char') and key.char == 'g':
