@@ -16,11 +16,9 @@ from PyQt5.QtCore import Qt, QThread, pyqtSignal, QTimer
 from PyQt5.QtGui import QPixmap, QImage
 from pynput.keyboard import Key, Listener
 
-direction = "off"
 speed_index = 0
 speeds = [235, 245, 255]
 speed = 235
-spin = "Clockwise"
 last_msg = None
 mic_enable = False
 
@@ -121,24 +119,23 @@ class ReconnectThread(QThread):
 class SerialThread(QThread):
     data_received = pyqtSignal(float, float, int, int)
     mic_change = pyqtSignal(bool)
-    spin_gear_changed = pyqtSignal(str, int)
+    gear_changed = pyqtSignal(int)
 
     def run(self):
 
         def on_press(key):
-            global direction, spin, speed, speed_index, last_msg
+            global speed, speed_index, last_msg
             global mic_enable
 
             msg = None
             if key == Key.up:
-                direction = "forward"
                 msg = (0, speed, 0, 0)
             elif key == Key.down:
-                direction = "backwards"
                 msg = (0, speed, 1, 0)
-            elif hasattr(key, 'char') and key.char == 'd':
-                direction = 1 if spin == "Counter-Clockwise" else -1
-                msg = (0, speed, 0, direction)
+            elif key == Key.right: # TODO: change keyboard documentation for this
+                msg = (0, speed, 0, -1)
+            elif key == Key.left:
+                msg = (0, speed, 0, 1)
             elif key == Key.space and not mic_enable:
                 mic_enable = True
                 self.mic_change.emit(mic_enable)
@@ -148,20 +145,16 @@ class SerialThread(QThread):
                 last_msg = msg
 
         def on_release(key):
-            global direction, spin, speed, speed_index, last_msg
+            global speed, speed_index, last_msg
             global mic_enable
             
-            if hasattr(key, 'char') and key.char == 's':
-                spin = "Counter-Clockwise" if spin == "Clockwise" else "Clockwise"
-                self.spin_gear_changed.emit(spin, speed_index)
-
-            elif hasattr(key, 'char') and key.char == 'g':
+            if hasattr(key, 'char') and key.char == 'g':
                 speed_index = 0 if speed_index == 2 else speed_index + 1
                 speed = speeds[speed_index]
-                self.spin_gear_changed.emit(spin, speed_index)
+                self.gear_changed.emit(speed_index)
 
-            elif key in (Key.up, Key.down) or (hasattr(key, 'char') and key.char == 'd'):
-                direction = "off"
+            # elif key in (Key.up, Key.down) or (hasattr(key, 'char') and key.char == 'd'):
+            elif key in (Key.up, Key.down, Key.right, Key.left):
                 msg = (0, 0, 0, 0)
                 if msg != last_msg:
                     self.data_received.emit(*msg)
@@ -278,7 +271,7 @@ class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("STC Rover")
-        global spin, speed
+        global speed
         self.motor_opcode = 0  
 
         self.serial_thread = SerialThread()
@@ -286,7 +279,7 @@ class MainWindow(QMainWindow):
         self.serial_thread.start()
         self.controls_reconnect_thread = None  # track if controls reconnection thread is active
         self.cam_reconnect_thread = None  # track if controls reconnection thread is active
-        self.serial_thread.spin_gear_changed.connect(self.update_spin_gear)
+        self.serial_thread.gear_changed.connect(self.update_gear)
 
         self.mic_thread = MicStreamThread(ROBOT_TAILSCALE_IP, PI_SPEAK_PORT, blocksize=BLOCKSIZE)
         self.mic_thread.start()
@@ -339,14 +332,6 @@ class MainWindow(QMainWindow):
             }
         """)
         infos_layout.addWidget(self.mic_status_label)
-        
-        self.spin_label = QLabel(f"Spin: {spin}")
-        self.spin_label.setStyleSheet("""
-            QLabel {
-                font-size: 20px;
-            }
-        """)
-        infos_layout.addWidget(self.spin_label)
 
         self.gear_label = QLabel(f"Gear: {speed_index + 1}")
         self.gear_label.setStyleSheet("""
@@ -408,8 +393,7 @@ class MainWindow(QMainWindow):
             self.cam_reconnect_thread.start()
             self.cam_reconnect_thread.speaker_status_update.connect(self.update_speaker_status) 
 
-    def update_spin_gear(self, spin_val, gear_index):
-        self.spin_label.setText(f"Spin: {spin_val}")
+    def update_gear(self, gear_index):
         self.gear_label.setText(f"Gear: {gear_index + 1}")
 
     def update_controls_status(self, connected: bool):
