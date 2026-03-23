@@ -2,10 +2,7 @@
 #   Closing out GUI (x on tab) causes stall. Ctrl+C doesn't work either. Only the garbage terminal icon
 #   Crashes if server disconnects? (new issue)
 #   Filter out low noise from camera mic
-#   Run car code on reboot
-#   Double mic connection?
 #   Better Camera Quality without huge delay?
-#   Integrate camera controls?
 #   Make chasis
 
 import sys, os, cv2, asyncio, websockets, websocket, base64, time
@@ -132,7 +129,7 @@ class SerialThread(QThread):
                 msg = (0, speed, 0, 0)
             elif key == Key.down:
                 msg = (0, speed, 1, 0)
-            elif key == Key.right: # TODO: change keyboard documentation for this
+            elif key == Key.right:
                 msg = (0, speed, 0, -1)
             elif key == Key.left:
                 msg = (0, speed, 0, 1)
